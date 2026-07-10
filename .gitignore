@@ -1,0 +1,14 @@
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local scratch files
+*.log
+*.tmp
+
+# Optional build/output dirs
+/dist/
+/build/
+/node_modules/

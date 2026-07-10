@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philippine Fiscal Simulator</title>
+    <meta name="theme-color" content="#020617">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23020617'/%3E%3Cpath d='M14 42h36M18 34h28M22 26h20M26 18h12' stroke='%2334d399' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Philippine Fiscal Simulator">
+    <meta name="description" content="An interactive simulator for exploring how taxes, spending, debt, inflation, and public policies affect the Philippine economy and everyday households.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://edisonq.xyz/philippine-fiscal-simulator.html">
+    <meta property="og:title" content="Philippine Fiscal Simulator">
+    <meta property="og:description" content="Explore how government policies affect the Philippine economy through real-time simulation, forecasting, and visual analysis.">
+    <meta property="og:image" content="https://edisonq.xyz/og-image/ph-econ-simulator3.webp">
+    <meta property="og:image:secure_url" content="https://edisonq.xyz/og-image/ph-econ-simulator3.webp">
+    <meta property="og:image:type" content="image/webp">
+    <meta property="og:image:alt" content="Preview image for the Philippine Fiscal Simulator">
+    <meta property="og:site_name" content="EdisonQ">
+    <meta property="og:locale" content="en_PH">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://edisonq.xyz/philippine-fiscal-simulator.html">
+    <meta name="twitter:title" content="Philippine Fiscal Simulator">
+    <meta name="twitter:description" content="Explore how government policies affect the Philippine economy through real-time simulation, forecasting, and visual analysis.">
+    <meta name="twitter:image" content="https://edisonq.xyz/og-image/ph-econ-simulator3.webp">
+    <meta name="twitter:image:alt" content="Preview image for the Philippine Fiscal Simulator">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .preset-btn.active {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #93c5fd;
+        }
+
+        .pulse-red { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        }
+
+        path, rect { transition: all 0.3s ease-in-out; }
+        .link-path:hover { stroke-opacity: 0.72 !important; cursor: pointer; }
+
+        .delta-neutral,
+        .delta-good,
+        .delta-bad {
+            margin-left: 0.5rem;
+            padding: 0.05rem 0.35rem;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .delta-neutral { color: #94a3b8; background: rgba(148, 163, 184, 0.08); }
+        .delta-good { color: #34d399; background: rgba(16, 185, 129, 0.13); }
+        .delta-bad { color: #fb7185; background: rgba(244, 63, 94, 0.14); }
+
+
+        .kpi-card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            border-radius: 0.85rem;
+            padding: 0.85rem;
+        }
+
+        .note-card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(51, 65, 85, 0.85);
+            border-left-width: 4px;
+            border-radius: 0.85rem;
+            padding: 0.75rem 0.85rem;
+        }
+
+        .note-good { border-left-color: #10b981; }
+        .note-warn { border-left-color: #f59e0b; }
+        .note-risk { border-left-color: #f43f5e; }
+        .note-info { border-left-color: #3b82f6; }
+        .calib-pill { border: 1px solid rgba(51, 65, 85, 0.9); background: rgba(15, 23, 42, 0.82); border-radius: 0.85rem; padding: 0.75rem 0.85rem; }
+
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.72rem;
+        }
+        .forecast-table th,
+        .forecast-table td {
+            border-bottom: 1px solid rgba(51, 65, 85, 0.7);
+            padding: 0.45rem 0.35rem;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .forecast-table th:first-child,
+        .forecast-table td:first-child { text-align: left; }
+        .quality-pill {
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            background: rgba(15, 23, 42, 0.82);
+            border-radius: 0.85rem;
+            padding: 0.75rem 0.85rem;
+        }
+        .tiny-btn {
+            background: rgba(51, 65, 85, 0.9);
+            border: 1px solid rgba(71, 85, 105, 0.9);
+            border-radius: 0.55rem;
+            color: white;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            padding: 0.55rem 0.7rem;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
+        }
+        .tiny-btn:hover { background: rgba(71, 85, 105, 0.95); }
+
+        .capital-flow-card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(51, 65, 85, 0.85);
+            border-radius: 0.85rem;
+            padding: 0.75rem;
+        }
+        .capital-flow-bar {
+            height: 0.35rem;
+            background: rgba(51, 65, 85, 0.7);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .capital-flow-fill {
+            height: 100%;
+            background: rgba(16, 185, 129, 0.8);
+            border-radius: 999px;
+            transition: width 0.2s ease;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            background: rgba(16, 185, 129, 0.10);
+            color: #6ee7b7;
+            border-radius: 999px;
+            padding: 0.15rem 0.45rem;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .live-badge.is-updating {
+            border-color: rgba(96, 165, 250, 0.55);
+            background: rgba(59, 130, 246, 0.16);
+            color: #bfdbfe;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+        }
+        .household-live-summary {
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            background: rgba(15, 23, 42, 0.45);
+            border-radius: 0.75rem;
+            padding: 0.55rem 0.65rem;
+            font-size: 0.68rem;
+            line-height: 1.35;
+            color: #94a3b8;
+            margin-bottom: 0.85rem;
+        }
+        .impact-live-pop {
+            transform: scale(1.035);
+            filter: brightness(1.18);
+        }
+        #impact-rice, #impact-veco, #impact-hospital, #impact-school, #impact-4ps {
+            transition: transform 0.14s ease, filter 0.14s ease, color 0.14s ease;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans">
+    <div class="max-w-[1450px] mx-auto bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden flex flex-col">
+        <div class="p-6 bg-slate-900 border-b border-slate-800 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight flex flex-wrap items-center gap-2">
+                    Philippine Fiscal Simulator
+                    <span class="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Experimental Only</span>
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Simulate. Analyze. Understand the Philippine Economy.</p>
+                <p class="text-xs text-amber-300 mt-2 max-w-3xl leading-relaxed">
+                    Educational simulator only. Not official government data, legal advice, tax advice, financial advice, investment advice, or a certified forecast.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full xl:w-auto items-stretch">
+                <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest block">Simulation Year</span>
+                    <span id="year-display" class="text-2xl font-mono font-bold text-blue-300">2026</span>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest block">Active GDP</span>
+                    <span id="gdp-display" class="text-2xl font-mono font-bold text-emerald-400">₱28.0T</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="wb-btn" onclick="fetchWorldBankAPI()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-[10px] font-bold uppercase tracking-wider text-white px-3 py-3 rounded-xl transition-colors shadow border border-slate-600">
+                        Sync World Bank
+                    </button>
+                    <button onclick="advanceYear()" class="flex-1 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bold uppercase tracking-wider text-[10px] px-3 py-3 rounded-xl shadow-lg border border-blue-400/30 transition-all active:scale-95">
+                        Advance 1 Year &raquo;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 p-4 border-b border-slate-800 flex flex-wrap gap-2 items-center justify-center">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mr-2">Select Administration:</span>
+            <button onclick="loadPreset('marcosSr', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Marcos Sr. (Pre-'86)</button>
+            <button onclick="loadPreset('cory', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">C. Aquino ('86-'92)</button>
+            <button onclick="loadPreset('ramos', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Ramos ('92-'98)</button>
+            <button onclick="loadPreset('estrada', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Estrada ('98-'01)</button>
+            <button onclick="loadPreset('arroyo', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Arroyo ('01-'10)</button>
+            <button onclick="loadPreset('aquino', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Aquino III ('10-'16)</button>
+            <button onclick="loadPreset('duterte', this)" class="preset-btn px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Duterte ('16-'22)</button>
+            <button onclick="loadPreset('marcosJr', this)" class="preset-btn active px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-300 transition shadow-sm">Marcos Jr. (Current)</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+            <div class="lg:col-span-3 space-y-6">
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-inner">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">Tax Extraction Levers</h3>
+                    <div class="space-y-4">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">Elite / Tycoon Tax</label>
+                                <span id="topTaxVal" class="text-emerald-400 font-mono">35%</span>
+                            </div>
+                            <input type="range" id="topTax" min="5" max="75" value="35" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-emerald-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">Middle-Class Income Tax</label>
+                                <span id="midTaxVal" class="text-emerald-400 font-mono">15%</span>
+                            </div>
+                            <input type="range" id="midTax" min="5" max="40" value="15" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-emerald-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">Corporate CIT</label>
+                                <span id="corpTaxVal" class="text-emerald-400 font-mono">25%</span>
+                            </div>
+                            <input type="range" id="corpTax" min="5" max="50" value="25" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-emerald-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">VAT / Consumption Tax</label>
+                                <span id="vatTaxVal" class="text-amber-400 font-mono">12%</span>
+                            </div>
+                            <input type="range" id="vatTax" min="0" max="25" value="12" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-inner">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">State Deployment Levers</h3>
+                    <div class="space-y-4">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">Social, Ed, & Health</label>
+                                <span id="socialSpendVal" class="text-blue-400 font-mono">38%</span>
+                            </div>
+                            <input type="range" id="socialSpend" min="5" max="70" value="38" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-medium">
+                                <label class="text-slate-300">Capital Infra</label>
+                                <span id="infraSpendVal" class="text-cyan-400 font-mono">29%</span>
+                            </div>
+                            <input type="range" id="infraSpend" min="5" max="60" value="29" class="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-cyan-400">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-relaxed mt-4 border-t border-slate-800 pt-3">Guardrail: social + infrastructure spending is capped at 95%, but the audit target keeps at least 15% for debt/admin.</p>
+                </div>
+
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-inner">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">Scenario Tools</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="saveScenario()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Save</button>
+                        <button onclick="loadSavedScenario()" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Load</button>
+                        <button onclick="setComparisonBaseline()" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Set Base</button>
+                        <button onclick="compareToBaseline()" class="bg-indigo-700 hover:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Compare</button>
+                        <button onclick="exportScenario('json')" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">JSON</button>
+                        <button onclick="exportScenario('csv')" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">CSV</button>
+                        <button onclick="applyShock('rice')" class="bg-amber-700 hover:bg-amber-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Rice Shock</button>
+                        <button onclick="applyShock('energy')" class="bg-orange-700 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Energy Shock</button>
+                        <button onclick="applyShock('recession')" class="bg-rose-700 hover:bg-rose-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Recession</button>
+                        <button onclick="clearShocks()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Clear</button>
+                    </div>
+                    <p id="scenario-status" class="text-[11px] text-slate-500 leading-relaxed mt-4 border-t border-slate-800 pt-3">No saved scenario yet. Shocks affect the current timeline only.</p>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-inner">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">Policy Recipes</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="applyPolicyRecipe('balanced')" class="bg-emerald-800 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Balanced</button>
+                        <button onclick="applyPolicyRecipe('growth')" class="bg-cyan-800 hover:bg-cyan-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Growth</button>
+                        <button onclick="applyPolicyRecipe('relief')" class="bg-blue-800 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Relief</button>
+                        <button onclick="applyPolicyRecipe('repair')" class="bg-rose-800 hover:bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Repair</button>
+                        <button onclick="autoBalanceBudget()" class="col-span-2 bg-gradient-to-r from-purple-700 to-blue-700 hover:from-purple-600 hover:to-blue-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Auto-Balance Budget</button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-relaxed mt-4 border-t border-slate-800 pt-3">Recipes set the sliders to common policy stances; Auto-Balance protects the debt/admin floor first.</p>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-inner">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">Model Governance</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
+                            <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Confidence</span>
+                            <span id="confidence-score" class="text-xl font-mono font-bold text-amber-300">--</span>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
+                            <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Data Mode</span>
+                            <span id="model-source" class="text-xs font-bold text-slate-200">Preset</span>
+                        </div>
+                    </div>
+                    <ul id="model-notes" class="text-[11px] text-slate-500 leading-relaxed mt-4 space-y-1 list-disc list-inside"></ul>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-amber-900/50 shadow-inner">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-4">
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-amber-300">Reality Audit</h3>
+                        <span id="realism-grade" class="text-[10px] font-bold rounded-full px-2 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20">Prototype</span>
+                    </div>
+                    <ul id="audit-notes" class="text-[11px] text-slate-400 leading-relaxed space-y-2 list-disc list-inside"></ul>
+                    <p class="text-[10px] text-slate-600 leading-relaxed mt-4 border-t border-slate-800 pt-3">V10.6.3 adds real-time Household Reality updates, private capital recycling, era-specific growth anchors, and the V10.4 evidence ledger, provenance metadata schema, row-level validation, evidence scoring, and audit-ready exports. Certification still requires agency-approved datasets and independent model review.</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 flex flex-col gap-4">
+                <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 relative min-h-[470px] flex-grow flex flex-col shadow-inner">
+                    <div class="flex justify-between items-center border-b border-slate-900 pb-2 mb-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Macro Flow Engine (Calibration-Grade SVG)</span>
+                    </div>
+                    <div id="chart-tooltip" class="absolute pointer-events-none opacity-0 bg-slate-800 text-white p-3 rounded-lg border border-slate-600 shadow-2xl z-50 text-xs font-sans transition-opacity duration-150 max-w-[260px]"></div>
+                    <div id="sankey-container" class="w-full flex-grow relative h-full min-h-[390px]">
+                        <svg id="sankey-svg" class="w-full h-full overflow-visible"></svg>
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 xl:grid-cols-6 gap-3">
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Revenue Take</span>
+                        <span id="kpi-revenue" class="text-lg font-mono font-bold text-emerald-400">--</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Debt/Admin</span>
+                        <span id="kpi-debt" class="text-lg font-mono font-bold text-rose-300">--</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Borrowing</span>
+                        <span id="kpi-deficit" class="text-lg font-mono font-bold text-orange-300">--</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Debt / GDP</span>
+                        <span id="kpi-debt-gdp" class="text-lg font-mono font-bold text-amber-300">--</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Next Growth</span>
+                        <span id="kpi-growth" class="text-lg font-mono font-bold text-blue-300">--</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">Calib. Error</span>
+                        <span id="kpi-calibration" class="text-lg font-mono font-bold text-slate-300">--</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 rounded-xl border border-emerald-900/40 p-4 shadow-inner">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-slate-900 pb-3 mb-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">Private Capital Recycling</span>
+                            <p class="text-[11px] text-slate-500 mt-1">Shows where Tycoon Equity goes after taxes: reinvestment, consumption, assets/offshore holdings, and capital-tax capture for the public budget.</p>
+                        </div>
+                        <span id="private-capital-summary" class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Waiting for model</span>
+                    </div>
+                    <div id="private-capital-grid" class="grid grid-cols-1 md:grid-cols-4 gap-3"></div>
+                </div>
+
+                <div class="bg-slate-950 rounded-xl border border-emerald-900/50 p-4 shadow-inner">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-900 pb-3 mb-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">Official Calibration Targets</span>
+                            <p id="calibration-context-note" class="text-[11px] text-slate-500 mt-1">Compares current/scenario output against 2026 fiscal anchors. Historical presets are treated as separate era approximations.</p>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="applyOfficialCalibration()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Calibrate</button>
+                            <button onclick="runSensitivityAudit()" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Sensitivity</button>
+                            <button onclick="exportAuditPack()" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg px-3 py-2 transition">Audit Pack</button>
+                        </div>
+                    </div>
+                    <div id="calibration-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+                    <div id="sensitivity-panel" class="hidden mt-3 border-t border-slate-900 pt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sensitivity Snapshot</span>
+                            <span id="sensitivity-summary" class="text-[10px] text-slate-500">Local slider perturbations</span>
+                        </div>
+                        <div id="sensitivity-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                    </div>
+                </div>
+
+
+                <div class="bg-slate-950 rounded-xl border border-blue-900/50 p-4 shadow-inner">
+                    <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-3 border-b border-slate-900 pb-3 mb-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Academic Forecasting Lab</span>
+                            <p class="text-[11px] text-slate-500 mt-1">Imports evidence-backed official time series, validates provenance metadata, runs backtests, and produces uncertainty bands. Built-in data is a demo scaffold; evidence work should import a source-documented CSV.</p>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <button onclick="loadStarterDataset()" class="tiny-btn">Starter Data</button>
+                            <button onclick="syncWorldBankHistory()" class="tiny-btn">WB GDP</button>
+                            <button onclick="triggerForecastCsvImport()" class="tiny-btn">Import CSV</button>
+                            <button onclick="exportForecastTemplate()" class="tiny-btn">Evidence Template</button>
+                            <button onclick="validateEvidenceData()" class="tiny-btn">Validate Evidence</button>
+                            <button onclick="runBacktest()" class="tiny-btn">Backtest</button>
+                            <button onclick="runAcademicForecast()" class="tiny-btn">Forecast</button>
+                            <button onclick="exportForecastCsv()" class="tiny-btn">Forecast CSV</button>
+                            <button onclick="exportAuditPack()" class="tiny-btn">Audit Pack</button>
+                        </div>
+                    </div>
+                    <input id="forecast-csv-input" type="file" accept=".csv,text/csv" class="hidden" onchange="handleForecastCsvFile(event)">
+                    <div id="forecast-quality-grid" class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3"></div>
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-3">
+                        <div class="quality-pill xl:col-span-1">
+                            <span class="text-[9px] text-slate-500 uppercase tracking-widest block mb-1">Required CSV columns</span>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">Core: year, gdp_nominal_php_b, real_gdp_growth_pct, revenue_php_b, expenditure_php_b, debt_php_b, remittances_php_b, inflation_pct. Evidence metadata: source_owner, source_dataset, source_url, release_date, vintage_date, unit_basis, frequency, row_status, transform_note. Optional: per-variable *_source_owner and *_source_url fields.</p>
+                        </div>
+                        <div class="quality-pill xl:col-span-2">
+                            <span class="text-[9px] text-slate-500 uppercase tracking-widest block mb-1">Method</span>
+                            <p id="forecast-method-note" class="text-[11px] text-slate-400 leading-relaxed">No forecast run yet. Load starter data or import an official CSV, then run Backtest and Forecast.</p>
+                        </div>
+                    </div>
+                    <div id="forecast-table-wrap" class="overflow-x-auto hidden"></div>
+                    <div id="backtest-table-wrap" class="overflow-x-auto hidden mt-3"></div>
+                    <div class="mt-3 border-t border-slate-900 pt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Evidence Ledger</span>
+                            <span id="evidence-summary" class="text-[10px] text-slate-500">No evidence dataset loaded</span>
+                        </div>
+                        <div id="evidence-ledger-grid" class="grid grid-cols-1 md:grid-cols-3 gap-2"></div>
+                        <div id="evidence-issues" class="mt-2 text-[11px] text-slate-500 leading-relaxed"></div>
+                    </div>
+                    <div class="mt-3 border-t border-slate-900 pt-3">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Official Source Registry</span>
+                        <div id="source-registry" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                    </div>
+                </div>
+
+                <div id="comparison-panel" class="hidden bg-slate-950 rounded-xl border border-slate-800 p-4 shadow-inner">
+                    <div class="flex items-center justify-between border-b border-slate-900 pb-2 mb-3">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Baseline Comparison</span>
+                        <span id="comparison-summary" class="text-[10px] font-bold uppercase tracking-widest text-slate-500">No baseline</span>
+                    </div>
+                    <div id="comparison-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                </div>
+
+                <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 shadow-inner">
+                    <div class="flex items-center justify-between border-b border-slate-900 pb-2 mb-3">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Policy Diagnosis</span>
+                        <span id="policy-summary" class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Auto-generated</span>
+                    </div>
+                    <div id="policy-notes" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 flex flex-col gap-4">
+                <div id="impact-card" class="bg-slate-800 rounded-xl border border-slate-700 p-5 shadow-2xl relative overflow-hidden transition-colors duration-500">
+                    <div id="impact-header-line" class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
+                    <div class="flex justify-between items-start mb-4 border-b border-slate-700 pb-3 gap-3">
+                        <div>
+                            <h3 class="text-[11px] font-bold uppercase tracking-widest text-white">Household Reality</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span id="household-live-badge" class="live-badge">Live</span>
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest">updates while sliding</span>
+                            </div>
+                        </div>
+                        <div id="deficit-warning" class="hidden bg-rose-600 text-white text-[9px] font-bold px-2 py-1 rounded uppercase tracking-widest pulse-red">Fiscal Stress</div>
+                    </div>
+
+                    <p id="household-live-summary" class="household-live-summary">Drag a slider to see rice, electricity, hospital wait time, class size, and aid update immediately.</p>
+
+                    <div class="space-y-3">
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-0.5">1kg Rice (Market Price)</span>
+                            <div class="flex justify-between items-end">
+                                <div class="flex items-center">
+                                    <span id="impact-rice" class="text-xl font-bold text-white">₱55.00</span>
+                                    <span id="delta-rice" class="delta-neutral">(--)</span>
+                                </div>
+                                <span id="rice-cause" class="text-[10px] text-slate-500">VAT Base</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-0.5">Electric Bill (VECO)</span>
+                            <div class="flex items-center">
+                                <span id="impact-veco" class="text-xl font-bold text-white">₱4,000</span>
+                                <span id="delta-veco" class="delta-neutral">(--)</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-0.5">Public ER Wait Time</span>
+                            <div class="flex items-center">
+                                <span id="impact-hospital" class="text-xl font-bold text-emerald-400">6.0 Hrs</span>
+                                <span id="delta-hospital" class="delta-neutral">(--)</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-0.5">Public School Class Size</span>
+                            <div class="flex items-center">
+                                <span id="impact-school" class="text-xl font-bold text-emerald-400">45</span>
+                                <span id="delta-school" class="delta-neutral">(--)</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-0.5">4Ps Est. Monthly Aid</span>
+                            <div class="flex items-center">
+                                <span id="impact-4ps" class="text-xl font-bold text-emerald-400">₱3,000</span>
+                                <span id="delta-4ps" class="delta-neutral">(--)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 relative h-[260px] flex-grow flex flex-col shadow-inner">
+                    <div class="flex justify-between border-b border-slate-900 pb-2 mb-2">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Synthetic Inequality</span>
+                        <span id="gini-score" class="text-xs font-mono font-bold text-white">0.00</span>
+                    </div>
+                    <div id="lorenz-container" class="w-full flex-grow relative min-h-[190px]">
+                        <svg id="lorenz-svg" class="w-full h-full overflow-visible"></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APP_VERSION = 'V10.6.3';
+        const EXPORT_SLUG = 'philippine-fiscal-simulator-v10-6-3';
+        const clone = (obj) => JSON.parse(JSON.stringify(obj));
+        const clamp = (min, val, max) => Math.max(min, Math.min(max, val));
+
+        let state = {
+            admin: 'marcosJr',
+            year: 2026,
+            gdp: 30877.27,
+            ofw: 2095.33,
+            ngDebtPhpB: 18130,
+            baseRice: 49.10,
+            baseVeco: 3571,
+            priceStressMultiplier: 1.0,
+            shocks: { gdpDrop: 0, priceStressSpike: 0 },
+            dataSource: 'preset',
+            syncedAt: null
+        };
+
+        const calibration = {
+            // All shares are intentionally visible here. These are model assumptions, not official coefficients.
+            corporateOutputShare: 0.47,
+            middleIncomeShare: 0.20,
+            workingPoorIncomeShare: 0.295,
+            otherGovRevenueShare: 0.035,
+            corpTaxableSurplusShare: 0.42,
+            corpTaxCompliance: 0.85,
+            eliteIncomeTaxExposure: 0.25,
+            eliteTaxCompliance: 0.85,
+            eliteReinvestmentShare: 0.35,
+            eliteConsumptionShare: 0.15,
+            eliteAssetHoldingShare: 0.40,
+            eliteCapitalTaxCaptureShare: 0.10,
+            middleIncomeTaxCompliance: 0.85,
+            middleVatExposure: 0.65,
+            poorVatExposure: 0.50,
+            vatCollectionEfficiency: 0.85,
+            riceVatPassThrough: 0.10,
+            powerVatPassThrough: 1.00,
+            debtAdminTargetShare: 0.15,
+            socialReferenceShare: 0.38,
+            fourPsReferenceGrant: 3000,
+            hospitalReferenceHours: 6.0,
+            schoolReferenceClassSize: 45,
+            deficitFinancingEnabled: true,
+            borrowingStressLimitShare: 0.065,
+            debtWarningShare: 0.60,
+            severeDebtWarningShare: 0.70
+        };
+
+        const officialSources = {
+            baselineYear: 2026,
+            latestWorldBankNominalGdpPhpB: 28009.93, // Latest actual/fallback GDP anchor; not the 2026 budget-implied GDP.
+            budgetImpliedNominalGdpPhpB: 30877.272727272728,
+            nationalBudgetOutlaysPhpB: 6793,
+            enactedRevenuePhpB: 4824,
+            presidentsBudgetRevenuePhpB: 4983,
+            ngDebtPhpB: 18130,
+            bir2025CollectionsPhpB: 3109.8,
+            bir2026TargetPhpB: 3580,
+            remittances2025UsdM: 35633.784,
+            remittancesJanApr2026UsdM: 11397.518,
+            phpUsdReference: 58.805,
+            q1RealGdpGrowth: 0.028,
+            latestHeadlineInflationRate: 0.064,
+            latestInflationYtdAverage: 0.048,
+            sourceNotes: [
+                "DBM / 2026 People\'s Enacted Budget: ₱6.793T national budget and ₱4.824T revenue projection.",
+                "DBM President\'s Budget Message / DOF statements: ₱4.983T revenue program referenced for FY2026 planning.",
+                'BSP remittance table: 2025 cash remittances US$35.633B; Jan-Apr 2026 US$11.398B.',
+                'BTr: NG outstanding debt ₱18.13T as of end-January 2026.',
+                'PSA: Q1 2026 real GDP growth 2.8% year-on-year.',
+                'PSA: June 2026 headline inflation 6.4%; January-June 2026 average inflation 4.8%.',
+                'V10.6.3 note: dashboard default uses the 2026 budget-implied GDP anchor; historical presets use era-specific growth anchors and are not compared directly against 2026 calibration targets. World Bank sync may load latest actual historical GDP. Forecast spending treats social/infra sliders as budget-composition levers, and partial-year anchor rows are excluded from rolling backtests and base forecasts.'
+            ]
+        };
+
+
+
+        const sourceRegistry = [
+            { owner: 'PSA', dataset: 'National Accounts / GDP / CPI / FIES', role: 'GDP levels, growth, inflation, distribution calibration', url: 'https://psa.gov.ph/statistics/national-accounts' },
+            { owner: 'DBM', dataset: 'National Budget / Budget-at-a-Glance', role: 'Expenditure and fiscal program anchors', url: 'https://www.dbm.gov.ph/index.php/budget-documents' },
+            { owner: 'DOF / BIR', dataset: 'Revenue program and tax collections', role: 'Tax-revenue calibration and collection-efficiency checks', url: 'https://www.dof.gov.ph/' },
+            { owner: 'BTr', dataset: 'National Government debt', role: 'Debt stock, borrowing, and debt/GDP calibration', url: 'https://www.treasury.gov.ph/' },
+            { owner: 'BSP', dataset: 'Overseas Filipino remittances', role: 'OFW/remittance inflow calibration', url: 'https://www.bsp.gov.ph/statistics/external/ofw2.aspx' },
+            { owner: 'World Bank', dataset: 'GDP current LCU API', role: 'Public fallback for historical nominal GDP series', url: 'https://api.worldbank.org/v2/country/ph/indicator/NY.GDP.MKTP.CN?format=json' }
+        ];
+
+        const requiredForecastColumns = [
+            'year',
+            'gdp_nominal_php_b',
+            'real_gdp_growth_pct',
+            'revenue_php_b',
+            'expenditure_php_b',
+            'debt_php_b',
+            'remittances_php_b',
+            'inflation_pct'
+        ];
+
+        const evidenceMetadataColumns = [
+            'source_owner',
+            'source_dataset',
+            'source_url',
+            'release_date',
+            'vintage_date',
+            'retrieved_at',
+            'unit_basis',
+            'frequency',
+            'row_status',
+            'source_tag',
+            'transform_note'
+        ];
+
+        const optionalVariableEvidenceColumns = [
+            'gdp_source_owner', 'gdp_source_url',
+            'growth_source_owner', 'growth_source_url',
+            'revenue_source_owner', 'revenue_source_url',
+            'expenditure_source_owner', 'expenditure_source_url',
+            'debt_source_owner', 'debt_source_url',
+            'remittances_source_owner', 'remittances_source_url',
+            'inflation_source_owner', 'inflation_source_url'
+        ];
+
+        const evidenceRequiredColumns = [
+            'source_owner',
+            'source_dataset',
+            'source_url',
+            'release_date',
+            'unit_basis',
+            'frequency',
+            'row_status',
+            'transform_note'
+        ];
+
+        const evidenceDataDictionary = {
+            year: 'Calendar or fiscal year as integer. Do not mix quarterly/YTD values into complete annual rows.',
+            gdp_nominal_php_b: 'Nominal GDP in PHP billions; preferred owner: PSA, fallback: World Bank current LCU converted to PHP billions.',
+            real_gdp_growth_pct: 'Real GDP annual growth in percent. Quarterly or YTD values must be marked partial_anchor or projection.',
+            revenue_php_b: 'National government revenue in PHP billions; preferred owner: DBM/DOF/BTr depending on budget/program vs actual collection.',
+            expenditure_php_b: 'National government expenditure/outlay in PHP billions; preferred owner: DBM/BTr actual cash operations or enacted budget.',
+            debt_php_b: 'National government outstanding debt stock in PHP billions; preferred owner: Bureau of the Treasury.',
+            remittances_php_b: 'Cash remittances in PHP billions. If BSP source is USD, document exchange-rate conversion in transform_note.',
+            inflation_pct: 'Annual average CPI inflation in percent. Monthly/YTD values must not be marked complete annual.',
+            row_status: 'complete_official, partial_anchor, projection, complete_demo, or estimate. Only complete_official/complete are eligible for backtests.',
+            unit_basis: 'Expected: php_billion_annual / percent_annual. Explain any transformed units in transform_note.',
+            variable_source_columns: 'Optional: use gdp_source_owner/source_url, revenue_source_owner/source_url, debt_source_owner/source_url, remittances_source_owner/source_url, and inflation_source_owner/source_url when a single row combines multiple official agencies.'
+        };
+
+        const starterTimeSeries = [
+            // Starter scaffold for UI testing only. Replace with official CSV for academic/government work.
+            { year: 2018, gdp_nominal_php_b: 19518, real_gdp_growth_pct: 6.3, revenue_php_b: 2850, expenditure_php_b: 3408, debt_php_b: 7293, remittances_php_b: 1680, inflation_pct: 5.2, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2019, gdp_nominal_php_b: 20286, real_gdp_growth_pct: 6.1, revenue_php_b: 3137, expenditure_php_b: 3798, debt_php_b: 7731, remittances_php_b: 1765, inflation_pct: 2.5, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2020, gdp_nominal_php_b: 17952, real_gdp_growth_pct: -9.5, revenue_php_b: 2856, expenditure_php_b: 4232, debt_php_b: 9795, remittances_php_b: 1725, inflation_pct: 2.6, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2021, gdp_nominal_php_b: 19411, real_gdp_growth_pct: 5.7, revenue_php_b: 3006, expenditure_php_b: 4675, debt_php_b: 11728, remittances_php_b: 1810, inflation_pct: 3.9, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2022, gdp_nominal_php_b: 22024, real_gdp_growth_pct: 7.6, revenue_php_b: 3545, expenditure_php_b: 5160, debt_php_b: 13206, remittances_php_b: 1920, inflation_pct: 5.8, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2023, gdp_nominal_php_b: 24319, real_gdp_growth_pct: 5.6, revenue_php_b: 3824, expenditure_php_b: 5336, debt_php_b: 14620, remittances_php_b: 1998, inflation_pct: 6.0, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2024, gdp_nominal_php_b: 26551, real_gdp_growth_pct: 5.7, revenue_php_b: 4421, expenditure_php_b: 5787, debt_php_b: 15890, remittances_php_b: 2078, inflation_pct: 3.2, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2025, gdp_nominal_php_b: 28010, real_gdp_growth_pct: 5.6, revenue_php_b: 4640, expenditure_php_b: 6125, debt_php_b: 17150, remittances_php_b: 2095, inflation_pct: 2.1, source_tag: 'starter-scaffold', row_status: 'complete_demo' },
+            { year: 2026, gdp_nominal_php_b: 30877.27, real_gdp_growth_pct: 2.8, revenue_php_b: 4824, expenditure_php_b: 6793, debt_php_b: 18130, remittances_php_b: 2095, inflation_pct: 4.8, source_tag: 'official-anchor-plus-scaffold', row_status: 'partial_anchor' }
+        ];
+
+        let forecastState = {
+            series: [],
+            source: 'none',
+            importedAt: null,
+            backtest: null,
+            forecast: null,
+            quality: null,
+            worldBankSyncedAt: null,
+            evidenceDiagnostics: null
+        };
+
+        let prevState = clone(state);
+        let viewState = { rice: 54.99, veco: 4000, hospital: 6.0, school: 45, subsidy4ps: 3000, gini: 0.40 };
+        let prevViewState = { ...viewState };
+        let lastMetrics = null;
+        let lastVals = null;
+        let comparisonBaseline = null;
+
+        try {
+            const rawBaseline = localStorage.getItem('philFiscalEngineBaselineV10');
+            if (rawBaseline) comparisonBaseline = JSON.parse(rawBaseline);
+        } catch (e) {
+            console.warn('Baseline restore failed:', e);
+            comparisonBaseline = null;
+        }
+
+        const inputs = {
+            topTax: document.getElementById('topTax'),
+            midTax: document.getElementById('midTax'),
+            corpTax: document.getElementById('corpTax'),
+            vatTax: document.getElementById('vatTax'),
+            socialSpend: document.getElementById('socialSpend'),
+            infraSpend: document.getElementById('infraSpend')
+        };
+
+        const presets = {
+            marcosSr: { year: 1985, gdp: 500, ofw: 15, ngDebtPhpB: 350, growthAnchor: 0.01, topTax: 35, midTax: 30, corpTax: 35, vatTax: 0, socialSpend: 15, infraSpend: 35, baseRice: 2.50, baseVeco: 150 },
+            cory: { year: 1992, gdp: 1000, ofw: 30, ngDebtPhpB: 650, growthAnchor: 0.03, topTax: 35, midTax: 25, corpTax: 35, vatTax: 10, socialSpend: 20, infraSpend: 15, baseRice: 9.00, baseVeco: 400 },
+            ramos: { year: 1998, gdp: 2500, ofw: 150, ngDebtPhpB: 1350, growthAnchor: 0.05, topTax: 34, midTax: 20, corpTax: 35, vatTax: 10, socialSpend: 25, infraSpend: 25, baseRice: 14.00, baseVeco: 800 },
+            estrada: { year: 2001, gdp: 3500, ofw: 300, ngDebtPhpB: 2200, growthAnchor: 0.02, topTax: 32, midTax: 20, corpTax: 32, vatTax: 10, socialSpend: 25, infraSpend: 20, baseRice: 18.00, baseVeco: 1200 },
+            arroyo: { year: 2010, gdp: 9000, ofw: 800, ngDebtPhpB: 4700, growthAnchor: 0.045, topTax: 32, midTax: 25, corpTax: 35, vatTax: 12, socialSpend: 28, infraSpend: 15, baseRice: 25.00, baseVeco: 1800 },
+            aquino: { year: 2016, gdp: 14000, ofw: 1200, ngDebtPhpB: 6000, growthAnchor: 0.06, topTax: 32, midTax: 25, corpTax: 30, vatTax: 12, socialSpend: 37, infraSpend: 20, baseRice: 35.00, baseVeco: 2500 },
+            duterte: { year: 2022, gdp: 19000, ofw: 1500, ngDebtPhpB: 13000, growthAnchor: 0.04, topTax: 35, midTax: 20, corpTax: 30, vatTax: 12, socialSpend: 35, infraSpend: 33, baseRice: 40.00, baseVeco: 3000 },
+            marcosJr: { year: 2026, gdp: 30877.27, ofw: 2095.33, ngDebtPhpB: 18130, growthAnchor: officialSources.q1RealGdpGrowth, topTax: 35, midTax: 15, corpTax: 25, vatTax: 12, socialSpend: 38, infraSpend: 29, baseRice: 49.10, baseVeco: 3571 }
+        };
+
+        const adminLabels = {
+            marcosSr: 'Marcos Sr. (Pre-1986)',
+            cory: 'C. Aquino (1986-1992)',
+            ramos: 'Ramos (1992-1998)',
+            estrada: 'Estrada (1998-2001)',
+            arroyo: 'Arroyo (2001-2010)',
+            aquino: 'Aquino III (2010-2016)',
+            duterte: 'Duterte (2016-2022)',
+            marcosJr: 'Marcos Jr. / Current'
+        };
+
+        function getCurrentAdminLabel() {
+            return adminLabels[state.admin] || state.admin || 'Custom scenario';
+        }
+
+        function isCurrentCalibrationContext() {
+            // The official calibration targets are 2026 anchors. Avoid apples-to-oranges comparisons for historical presets.
+            return state.dataSource === 'official-calibration' || state.dataSource === 'worldBank' || state.admin === 'marcosJr';
+        }
+
+        function getScenarioGrowthAnchor() {
+            const preset = presets[state.admin];
+            if (preset && Number.isFinite(preset.growthAnchor)) return preset.growthAnchor;
+            return officialSources.q1RealGdpGrowth;
+        }
+
+        function formatPeso(value, digits = 0) {
+            return `₱${value.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits })}`;
+        }
+
+        function updateHeader() {
+            document.getElementById('year-display').innerText = state.year;
+            document.getElementById('gdp-display').innerText = `₱${(state.gdp / 1000).toFixed(1)}T`;
+        }
+
+        function readInputValues() {
+            const vals = {};
+            Object.keys(inputs).forEach(key => {
+                vals[key] = parseFloat(inputs[key].value) / 100;
+                document.getElementById(`${key}Val`).innerText = `${inputs[key].value}%`;
+            });
+            return vals;
+        }
+
+
+        function getInputSnapshot() {
+            const snapshot = {};
+            Object.keys(inputs).forEach(key => { snapshot[key] = inputs[key].value; });
+            return snapshot;
+        }
+
+        function normalizeScenarioState(rawState = {}) {
+            const normalized = { ...rawState };
+            // Backward compatibility for scenarios saved before V10.6.3 terminology cleanup.
+            if (normalized.priceStressMultiplier === undefined && normalized.inflation !== undefined) {
+                normalized.priceStressMultiplier = normalized.inflation;
+            }
+            delete normalized.inflation;
+            normalized.shocks = { ...(normalized.shocks || {}) };
+            if (normalized.shocks.priceStressSpike === undefined && normalized.shocks.inflationSpike !== undefined) {
+                normalized.shocks.priceStressSpike = normalized.shocks.inflationSpike;
+            }
+            delete normalized.shocks.inflationSpike;
+            if (!Number.isFinite(normalized.priceStressMultiplier)) normalized.priceStressMultiplier = 1.0;
+            if (!Number.isFinite(normalized.shocks.priceStressSpike)) normalized.shocks.priceStressSpike = 0;
+            if (!Number.isFinite(normalized.shocks.gdpDrop)) normalized.shocks.gdpDrop = 0;
+            return normalized;
+        }
+
+        function getNeutralForecastVals() {
+            // Used for backtesting when historical tax/spending policy series are not supplied.
+            // This avoids contaminating historical forecast-error tests with today's slider settings.
+            return { topTax: 0.35, midTax: 0.15, corpTax: 0.25, vatTax: 0.12, socialSpend: 0.38, infraSpend: 0.29 };
+        }
+
+        function calculateProjection(vals) {
+            // Scenario growth is anchored to the latest observed real-growth signal, then adjusted by policy deltas.
+            // This avoids accidentally turning budget-composition slider levels into a fake 5-6% baseline forecast.
+            const neutral = getNeutralForecastVals();
+            const baselineRealGrowth = getScenarioGrowthAnchor();
+            const taxDrag = ((vals.topTax - neutral.topTax) * 0.018)
+                + ((vals.midTax - neutral.midTax) * 0.022)
+                + ((vals.corpTax - neutral.corpTax) * 0.030)
+                + ((vals.vatTax - neutral.vatTax) * 0.018);
+            const infraBoost = (vals.infraSpend - neutral.infraSpend) * 0.055;
+            const socialBoost = (vals.socialSpend - neutral.socialSpend) * 0.035;
+            const instabilityDrag = Math.max(0, state.priceStressMultiplier - 1) * 0.075;
+            const growthRate = clamp(-0.04, baselineRealGrowth + infraBoost + socialBoost - taxDrag - instabilityDrag - state.shocks.gdpDrop, 0.085);
+            const ofwGrowth = clamp(-0.02, 0.025 + ((vals.socialSpend - neutral.socialSpend) * 0.030), 0.065);
+            const priceDrift = clamp(0.010, officialSources.latestInflationYtdAverage + ((vals.vatTax - neutral.vatTax) * 0.035) + (Math.max(0, state.priceStressMultiplier - 1) * 0.08), 0.14);
+            return { growthRate, ofwGrowth, priceDrift };
+        }
+
+        function calculatePrivateCapitalFlows(privateCapitalGross) {
+            const gross = Math.max(0, privateCapitalGross || 0);
+            const taxCapture = gross * calibration.eliteCapitalTaxCaptureShare;
+            const privateNet = Math.max(0, gross - taxCapture);
+            const recyclingBase = Math.max(0.01, calibration.eliteReinvestmentShare + calibration.eliteConsumptionShare + calibration.eliteAssetHoldingShare);
+            const reinvestment = privateNet * (calibration.eliteReinvestmentShare / recyclingBase);
+            const consumption = privateNet * (calibration.eliteConsumptionShare / recyclingBase);
+            const assetsOffshore = privateNet * (calibration.eliteAssetHoldingShare / recyclingBase);
+            const privateInvestmentShare = reinvestment / Math.max(1, state.gdp);
+
+            return { gross, taxCapture, privateNet, reinvestment, consumption, assetsOffshore, privateInvestmentShare };
+        }
+
+        function applyPrivateCapitalGrowthBoost(projection, privateInvestmentShare = 0) {
+            const privateInvestmentBoost = clamp(0, privateInvestmentShare * 0.035, 0.018);
+            return {
+                ...projection,
+                privateInvestmentBoost,
+                growthRate: clamp(-0.04, projection.growthRate + privateInvestmentBoost, 0.095)
+            };
+        }
+
+        function updatePrivateCapitalPanel(metrics) {
+            const grid = document.getElementById('private-capital-grid');
+            const summary = document.getElementById('private-capital-summary');
+            if (!grid || !summary || !metrics?.privateCapitalFlows) return;
+
+            const flows = metrics.privateCapitalFlows;
+            const total = Math.max(1, flows.gross);
+            const rows = [
+                { label: 'Business reinvestment', value: flows.reinvestment, helper: 'Factories, jobs, productivity', good: true },
+                { label: 'Luxury consumption', value: flows.consumption, helper: 'Spending that can create VAT/service activity', good: null },
+                { label: 'Assets / offshore', value: flows.assetsOffshore, helper: 'Idle assets, property, portfolio, or leakage', good: false },
+                { label: 'Capital tax capture', value: flows.taxCapture, helper: 'Returns to public budget', good: true }
+            ];
+
+            summary.textContent = `${formatPeso(flows.gross, 0)} private capital tracked`;
+            grid.innerHTML = rows.map(row => {
+                const pct = (row.value / total) * 100;
+                const textColor = row.good === true ? 'text-emerald-300' : row.good === false ? 'text-amber-300' : 'text-blue-300';
+                return `
+                    <div class="capital-flow-card">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">${row.label}</span>
+                        <div class="text-base font-mono font-bold ${textColor}">${formatPeso(row.value, 0)}</div>
+                        <div class="text-[10px] text-slate-500">${pct.toFixed(1)}% • ${row.helper}</div>
+                        <div class="capital-flow-bar"><div class="capital-flow-fill" style="width:${Math.min(100, Math.max(0, pct)).toFixed(1)}%"></div></div>
+                    </div>`;
+            }).join('');
+        }
+
+        function getOfficialTargets() {
+            const gdp = officialSources.budgetImpliedNominalGdpPhpB;
+            const revenue = officialSources.enactedRevenuePhpB;
+            const budget = officialSources.nationalBudgetOutlaysPhpB;
+            const deficit = Math.max(0, budget - revenue);
+            const annualized2026RemittanceUsdM = officialSources.remittancesJanApr2026UsdM * 3;
+            const conservativeRemittancePhpB = (officialSources.remittances2025UsdM * officialSources.phpUsdReference) / 1000;
+            const annualizedRemittancePhpB = (annualized2026RemittanceUsdM * officialSources.phpUsdReference) / 1000;
+            return {
+                gdp,
+                revenue,
+                budget,
+                deficit,
+                revenueShare: revenue / gdp,
+                budgetShare: budget / gdp,
+                deficitShare: deficit / gdp,
+                debtPhpB: officialSources.ngDebtPhpB,
+                debtShare: officialSources.ngDebtPhpB / gdp,
+                remittancePhpB: conservativeRemittancePhpB,
+                annualizedRemittancePhpB,
+                q1Growth: officialSources.q1RealGdpGrowth
+            };
+        }
+
+        function getCalibrationDiagnostics(metrics) {
+            const t = getOfficialTargets();
+            const revenueError = (metrics.treasuryTotal - t.revenue) / Math.max(1, t.revenue);
+            const deficitError = ((metrics.modelBorrowing || 0) - t.deficit) / Math.max(1, t.deficit);
+            const debtRatio = metrics.debtRatio ?? ((state.ngDebtPhpB ?? officialSources.ngDebtPhpB) / Math.max(1, state.gdp));
+            const debtError = debtRatio - t.debtShare;
+            const remittanceError = (state.ofw - t.remittancePhpB) / Math.max(1, t.remittancePhpB);
+            const budgetError = ((metrics.budgetEnvelope || metrics.treasuryTotal) - t.budget) / Math.max(1, t.budget);
+            const gdpError = (state.gdp - t.gdp) / Math.max(1, t.gdp);
+            const avgAbsError = safeMean([
+                Math.abs(revenueError),
+                Math.abs(deficitError),
+                Math.abs(debtError),
+                Math.abs(remittanceError),
+                Math.abs(budgetError),
+                Math.abs(gdpError)
+            ]);
+            return { targets: t, revenueError, deficitError, debtError, remittanceError, budgetError, gdpError, avgAbsError };
+        }
+
+        function errorClass(absError) {
+            if (absError <= 0.05) return 'text-emerald-400';
+            if (absError <= 0.12) return 'text-amber-300';
+            return 'text-rose-400';
+        }
+
+        function updateCalibrationPanel(metrics) {
+            const grid = document.getElementById('calibration-grid');
+            const note = document.getElementById('calibration-context-note');
+            if (!grid || !metrics) return;
+
+            if (!isCurrentCalibrationContext()) {
+                if (note) note.textContent = '2026 calibration targets are disabled for historical presets to avoid apples-to-oranges comparisons.';
+                grid.innerHTML = `
+                    <div class="calib-pill border-blue-800/60 md:col-span-3">
+                        <div class="text-[9px] text-blue-300 uppercase tracking-widest mb-1">Historical preset mode</div>
+                        <div class="text-sm font-bold text-white">${getCurrentAdminLabel()} is an era approximation, not a 2026 calibration case.</div>
+                        <div class="text-[11px] text-slate-400 mt-1 leading-relaxed">Use this preset for relative what-if changes inside that era. Click <span class="font-bold text-emerald-300">Calibrate</span> to return to the current 2026 official-anchor comparison.</div>
+                    </div>`;
+                return;
+            }
+
+            if (note) note.textContent = 'Compares current/scenario output against 2026 fiscal anchors. Smaller error = more decision-useful.';
+            const d = getCalibrationDiagnostics(metrics);
+            const rows = [
+                { label: 'Revenue', model: formatPeso(metrics.treasuryTotal, 0), target: formatPeso(d.targets.revenue, 0), error: d.revenueError },
+                { label: 'Borrowing Gap', model: formatPeso(metrics.modelBorrowing || 0, 0), target: formatPeso(d.targets.deficit, 0), error: d.deficitError },
+                { label: 'Debt / GDP', model: `${((metrics.debtRatio || 0) * 100).toFixed(1)}%`, target: `${(d.targets.debtShare * 100).toFixed(1)}%`, error: d.debtError },
+                { label: 'OFW Remittance', model: formatPeso(state.ofw, 0), target: formatPeso(d.targets.remittancePhpB, 0), error: d.remittanceError },
+                { label: 'Budget Size', model: formatPeso(metrics.budgetEnvelope || metrics.treasuryTotal, 0), target: formatPeso(d.targets.budget, 0), error: d.budgetError },
+                { label: 'GDP Anchor', model: `₱${(state.gdp / 1000).toFixed(2)}T`, target: `₱${(d.targets.gdp / 1000).toFixed(2)}T`, error: d.gdpError }
+            ];
+
+            grid.innerHTML = rows.map(row => {
+                const absError = Math.abs(row.error);
+                const good = absError <= 0.05;
+                const warn = absError <= 0.12;
+                const border = good ? 'border-emerald-800/60' : warn ? 'border-amber-800/60' : 'border-rose-800/60';
+                return `
+                    <div class="calib-pill ${border}">
+                        <div class="flex justify-between gap-2 mb-1">
+                            <span class="text-[9px] text-slate-500 uppercase tracking-widest">${row.label}</span>
+                            <span class="text-[10px] font-bold ${errorClass(absError)}">${(row.error * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="text-sm font-mono font-bold text-white">${row.model}</div>
+                        <div class="text-[10px] text-slate-500">target: ${row.target}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateKPIs(metrics) {
+            const revenueTake = metrics.treasuryTotal / Math.max(1, state.gdp);
+            const debtShare = metrics.debtSpend / Math.max(1, metrics.budgetEnvelope || metrics.treasuryTotal);
+            const deficitShare = (metrics.modelBorrowing || 0) / Math.max(1, state.gdp);
+            const diagnostics = isCurrentCalibrationContext() ? getCalibrationDiagnostics(metrics) : null;
+            const deficitWarningThreshold = diagnostics ? diagnostics.targets.deficitShare + 0.015 : 0.075;
+
+            document.getElementById('kpi-revenue').innerText = `${(revenueTake * 100).toFixed(1)}%`;
+            document.getElementById('kpi-debt').innerText = `${(debtShare * 100).toFixed(1)}%`;
+            document.getElementById('kpi-deficit').innerText = `${(deficitShare * 100).toFixed(1)}%`;
+            document.getElementById('kpi-debt-gdp').innerText = `${((metrics.debtRatio || 0) * 100).toFixed(1)}%`;
+            document.getElementById('kpi-growth').innerText = `${(metrics.projection.growthRate * 100).toFixed(1)}%`;
+            document.getElementById('kpi-calibration').innerText = diagnostics ? `${(diagnostics.avgAbsError * 100).toFixed(1)}%` : 'N/A';
+
+            document.getElementById('kpi-debt').className = debtShare < calibration.debtAdminTargetShare
+                ? 'text-lg font-mono font-bold text-rose-400'
+                : 'text-lg font-mono font-bold text-emerald-400';
+            document.getElementById('kpi-deficit').className = deficitShare > deficitWarningThreshold
+                ? 'text-lg font-mono font-bold text-rose-400'
+                : 'text-lg font-mono font-bold text-orange-300';
+            document.getElementById('kpi-debt-gdp').className = (metrics.debtRatio || 0) > calibration.severeDebtWarningShare
+                ? 'text-lg font-mono font-bold text-rose-400'
+                : (metrics.debtRatio || 0) > calibration.debtWarningShare
+                    ? 'text-lg font-mono font-bold text-amber-300'
+                    : 'text-lg font-mono font-bold text-emerald-400';
+            document.getElementById('kpi-growth').className = metrics.projection.growthRate < 0
+                ? 'text-lg font-mono font-bold text-rose-400'
+                : metrics.projection.growthRate > 0.055
+                    ? 'text-lg font-mono font-bold text-emerald-400'
+                    : 'text-lg font-mono font-bold text-blue-300';
+            document.getElementById('kpi-calibration').className = !diagnostics
+                ? 'text-lg font-mono font-bold text-slate-400'
+                : diagnostics.avgAbsError <= 0.05
+                    ? 'text-lg font-mono font-bold text-emerald-400'
+                    : diagnostics.avgAbsError <= 0.12
+                        ? 'text-lg font-mono font-bold text-amber-300'
+                        : 'text-lg font-mono font-bold text-rose-400';
+
+            updateCalibrationPanel(metrics);
+        }
+
+        function updateRealityAudit(metrics, vals) {
+            const gradeEl = document.getElementById('realism-grade');
+            const notesEl = document.getElementById('audit-notes');
+            if (!gradeEl || !notesEl) return;
+
+            const revenueTake = metrics.treasuryTotal / Math.max(1, state.gdp);
+            const debtShare = metrics.debtSpend / Math.max(1, metrics.budgetEnvelope || metrics.treasuryTotal);
+            const notes = [];
+
+            if (!isCurrentCalibrationContext()) {
+                gradeEl.textContent = 'Historical Scenario';
+                gradeEl.className = 'text-[10px] font-bold rounded-full px-2 py-1 bg-blue-500/10 text-blue-300 border border-blue-500/20';
+                notes.push(`${getCurrentAdminLabel()} is a simplified historical-era scenario. It is no longer compared directly against 2026 fiscal anchors.`);
+                notes.push(`Revenue take is ${(revenueTake * 100).toFixed(1)}% of GDP inside this scenario. Use this as a relative signal, not an official historical reconstruction.`);
+                notes.push(`Borrowing/deficit proxy is ${formatPeso(metrics.modelBorrowing || 0, 0)}. No era-specific official deficit target is loaded for this preset.`);
+                notes.push(`Growth projection uses this era preset's rough growth anchor of ${(getScenarioGrowthAnchor() * 100).toFixed(1)}%, then adjusts for taxes, spending, price stress, shocks, and private investment.`);
+                notes.push(`Debt/GDP is estimated at ${((metrics.debtRatio || 0) * 100).toFixed(1)}%; historical debt baselines are approximate placeholders.`);
+                notes.push(`Rice, electricity, ER wait, class size, 4Ps-style aid, and synthetic inequality remain simplified teaching proxies.`);
+                notesEl.innerHTML = notes.map(note => `<li>${note}</li>`).join('');
+                return;
+            }
+
+            const diagnostics = getCalibrationDiagnostics(metrics);
+            notes.push(`Revenue take is ${(revenueTake * 100).toFixed(1)}% of GDP versus an official-anchor target near ${(diagnostics.targets.revenueShare * 100).toFixed(1)}%.`);
+            notes.push(`Borrowing/deficit proxy is ${formatPeso(metrics.modelBorrowing || 0, 0)}, compared with the fiscal-gap anchor of ${formatPeso(diagnostics.targets.deficit, 0)}.`);
+            notes.push(`Debt/GDP is estimated at ${((metrics.debtRatio || 0) * 100).toFixed(1)}% current, with projected year-end debt/GDP near ${((metrics.projectedDebtRatio || metrics.debtRatio || 0) * 100).toFixed(1)}% after modeled borrowing.`);
+            notes.push(`Rice uses only ${(calibration.riceVatPassThrough * 100).toFixed(0)}% VAT pass-through because staple food prices are not the same as a full VAT-taxed retail basket.`);
+            notes.push(`Synthetic inequality is directional only: 70% poor / 29% middle / 1% elite grouping. Use it for relative scenarios, not official Gini reporting.`);
+            if (metrics.privateCapitalFlows) {
+                notes.push(`Tycoon Equity now recycles through private investment, consumption, assets/offshore holdings, and ${(calibration.eliteCapitalTaxCaptureShare * 100).toFixed(0)}% capital-tax capture into the public budget.`);
+            }
+
+            if (state.dataSource === 'official-calibration') {
+                notes.push('Official calibration mode is active: 2026 GDP, revenue, deficit, debt, and OFW anchors are loaded into the scenario.');
+            } else if (state.dataSource === 'worldBank') {
+                notes.push('GDP is live-synced from World Bank current-LCU data; fiscal targets remain the built-in 2026 source registry.');
+            } else {
+                notes.push('Current preset mode is active. Click Calibrate to force exact alignment to official 2026 anchors.');
+            }
+
+            const avgError = diagnostics.avgAbsError;
+            if (avgError <= 0.05 && debtShare >= calibration.debtAdminTargetShare && (metrics.debtRatio || 0) < calibration.severeDebtWarningShare) {
+                gradeEl.textContent = 'Analysis-Grade';
+                gradeEl.className = 'text-[10px] font-bold rounded-full px-2 py-1 bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+            } else if (avgError <= 0.12 && debtShare >= 0.10) {
+                gradeEl.textContent = 'Workshop-Grade';
+                gradeEl.className = 'text-[10px] font-bold rounded-full px-2 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20';
+            } else {
+                gradeEl.textContent = 'Explainer Only';
+                gradeEl.className = 'text-[10px] font-bold rounded-full px-2 py-1 bg-rose-500/10 text-rose-300 border border-rose-500/20';
+                notes.push('Calibration error is too high for serious scenario discussion. Recalibrate or adjust assumptions before presenting outputs.');
+            }
+
+            notesEl.innerHTML = notes.map(note => `<li>${note}</li>`).join('');
+        }
+
+        function renderPolicyNotes(metrics, vals) {
+            const notes = [];
+            const debtShare = metrics.debtSpend / Math.max(1, metrics.budgetEnvelope || metrics.treasuryTotal);
+
+            if (debtShare < calibration.debtAdminTargetShare) {
+                notes.push({ type: 'risk', title: 'Debt/admin cushion is too thin', body: 'Budget pressure is spilling into the household stress multiplier. Reduce social/infra allocation, raise revenue, or lower borrowing pressure before advancing years.' });
+            }
+
+            if ((metrics.modelBorrowing || 0) / Math.max(1, state.gdp) > (metrics.officialTargets?.deficitShare || 0.06) + 0.015) {
+                notes.push({ type: 'risk', title: 'Borrowing is above fiscal anchor', body: 'The scenario leans on deficit financing beyond the official-style reference gap. Debt dynamics become less credible.' });
+            }
+
+            if ((metrics.debtRatio || 0) > calibration.debtWarningShare) {
+                notes.push({ type: 'warn', title: 'Debt stock is elevated', body: 'High debt/GDP narrows future borrowing room. Prioritize revenue quality and high-return spending.' });
+            }
+
+            if (metrics.privateCapitalFlows) {
+                const flows = metrics.privateCapitalFlows;
+                const productiveShare = flows.reinvestment / Math.max(1, flows.gross);
+                const leakageShare = flows.assetsOffshore / Math.max(1, flows.gross);
+                if (productiveShare >= 0.30) {
+                    notes.push({ type: 'good', title: 'Private capital is recycling productively', body: 'A meaningful share of Tycoon Equity is flowing back into business investment, which can support jobs and future growth.' });
+                }
+                if (leakageShare >= 0.40) {
+                    notes.push({ type: 'warn', title: 'Wealth leakage is still large', body: 'A big share of private capital remains in assets, portfolios, or offshore-style holdings. This can weaken broad-based growth.' });
+                }
+                if (flows.taxCapture > 0) {
+                    notes.push({ type: 'info', title: 'Capital tax capture funds the public budget', body: `${formatPeso(flows.taxCapture, 0)} of retained elite capital is routed back into Treasury before public spending is deployed.` });
+                }
+            }
+
+            if (vals.vatTax > 0.15) {
+                notes.push({ type: 'warn', title: 'VAT is doing heavy lifting', body: 'Revenue rises, but rice and electricity pain hits households quickly. This is politically expensive.' });
+            }
+
+            if (vals.socialSpend < 0.25) {
+                notes.push({ type: 'risk', title: 'Social spending is underpowered', body: 'ER wait time, class size, and household support degrade fast when the social lever gets squeezed.' });
+            } else if (vals.socialSpend >= 0.40) {
+                notes.push({ type: 'good', title: 'Social buffer is strong', body: 'Public services improve and inequality softens, but watch the debt/admin floor.' });
+            }
+
+            if (vals.infraSpend >= 0.35) {
+                notes.push({ type: 'info', title: 'Infrastructure-forward stance', body: 'Long-run growth gets a lift, especially if taxes stay moderate and price stress is contained.' });
+            }
+
+            if (viewState.gini > 0.45) {
+                notes.push({ type: 'risk', title: 'Inequality remains elevated', body: 'The Lorenz curve suggests wealth concentration is still too steep. More targeted redistribution may be needed.' });
+            } else if (viewState.gini < 0.35) {
+                notes.push({ type: 'good', title: 'Distribution is healthier', body: 'The model is showing a more balanced spread after taxes, social spend, and transfers.' });
+            }
+
+            if (metrics.projection.growthRate < 0) {
+                notes.push({ type: 'risk', title: 'Next-year growth turns negative', body: 'The current mix is dragging the economy into contraction. Rebalance before using Advance 1 Year.' });
+            } else if (metrics.projection.growthRate > 0.06) {
+                notes.push({ type: 'good', title: 'Growth outlook is strong', body: 'The next-year projection is expansionary. Keep price stress and debt service from eating the gain.' });
+            }
+
+            if (state.shocks.priceStressSpike > 0 || state.shocks.gdpDrop > 0) {
+                notes.push({ type: 'warn', title: 'Shock mode is active', body: 'Temporary shocks are distorting price stress and growth. Use Clear if you want a clean baseline comparison.' });
+            }
+
+            if (notes.length === 0) {
+                notes.push({ type: 'info', title: 'Balanced but not dramatic', body: 'The model sees a workable policy mix. Try saving it, then stress-test with shocks.' });
+            }
+
+            document.getElementById('policy-summary').innerText = `${notes.length} signals`;
+            document.getElementById('policy-notes').innerHTML = notes.slice(0, 4).map(note => `
+                <div class="note-card note-${note.type}">
+                    <div class="text-xs font-bold text-white mb-1">${note.title}</div>
+                    <div class="text-[11px] text-slate-400 leading-relaxed">${note.body}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateModelGovernance(metrics, vals) {
+            const sourceEl = document.getElementById('model-source');
+            const scoreEl = document.getElementById('confidence-score');
+            const notesEl = document.getElementById('model-notes');
+            if (!sourceEl || !scoreEl || !notesEl) return;
+
+            let score = 62;
+            const notes = [];
+            const spendShare = vals.socialSpend + vals.infraSpend;
+            const shockActive = state.shocks.priceStressSpike > 0.005 || state.shocks.gdpDrop > 0.005;
+            const diagnostics = isCurrentCalibrationContext() ? getCalibrationDiagnostics(metrics) : null;
+
+            if (state.dataSource === 'official-calibration') {
+                score += 24;
+                sourceEl.textContent = 'Official 2026 anchors';
+                notes.push('Scenario is aligned to fiscal, debt, GDP, and remittance anchors from the source registry.');
+            } else if (state.dataSource === 'worldBank') {
+                score += 18;
+                sourceEl.textContent = `World Bank GDP ${state.year}`;
+                notes.push('GDP baseline came from live World Bank sync; fiscal relationships remain calibrated assumptions.');
+            } else if (state.dataSource === 'saved') {
+                score += 4;
+                sourceEl.textContent = 'Saved scenario';
+                notes.push('Loaded from a saved browser scenario; treat it as a user-defined working model.');
+            } else if (!isCurrentCalibrationContext()) {
+                score -= 4;
+                sourceEl.textContent = 'Historical preset';
+                notes.push(`${getCurrentAdminLabel()} uses an era-specific growth anchor and is not scored against 2026 calibration targets.`);
+            } else {
+                sourceEl.textContent = 'Preset / assumption';
+                notes.push('Current preset and household baselines are approximate placeholders until Calibrate is clicked.');
+            }
+
+            if (state.year > 2030) {
+                score -= 8;
+                notes.push('Future years are projection territory; confidence drops the farther you advance the model.');
+            }
+
+            if (shockActive) {
+                score -= 6;
+                notes.push('Shock mode is active, so price and growth readings are stress-test outputs rather than baseline forecasts.');
+            }
+
+            if (diagnostics) {
+                if (diagnostics.avgAbsError <= 0.05) {
+                    score += 10;
+                    notes.push('Average calibration error is within a strong analysis band.');
+                } else if (diagnostics.avgAbsError > 0.12) {
+                    score -= 12;
+                    notes.push('Calibration error is high; outputs should be treated as directional only.');
+                }
+            } else {
+                score -= 5;
+                notes.push('Calibration score is disabled because this historical preset should not be compared to 2026 fiscal anchors.');
+            }
+
+            if (spendShare > 0.85) {
+                score -= 7;
+                notes.push('Social + infrastructure allocations exceed the safer 85% budget zone, pressuring debt/admin capacity.');
+            } else {
+                score += 4;
+                notes.push('Budget deployment leaves a workable debt/admin cushion under the current slider mix.');
+            }
+
+            if (vals.vatTax >= 0.18) {
+                score -= 5;
+                notes.push('High VAT settings increase household sensitivity; policy reading becomes more politically fragile.');
+            }
+
+            score = Math.round(clamp(25, score, 90));
+            scoreEl.textContent = `${score}/100`;
+            scoreEl.className = score >= 75
+                ? 'text-xl font-mono font-bold text-emerald-400'
+                : score >= 55
+                    ? 'text-xl font-mono font-bold text-amber-300'
+                    : 'text-xl font-mono font-bold text-rose-400';
+
+            notesEl.innerHTML = notes.slice(0, 4).map(note => `<li>${note}</li>`).join('');
+        }
+
+        function getCurrentScenarioSnapshot() {
+            const kpis = lastMetrics ? {
+                revenueTake: lastMetrics.treasuryTotal / Math.max(1, state.gdp),
+                debtShare: lastMetrics.debtSpend / Math.max(1, lastMetrics.treasuryTotal),
+                priceStressMultiplier: state.priceStressMultiplier,
+                nextGrowth: lastMetrics.projection.growthRate,
+                modelBorrowing: lastMetrics.modelBorrowing || 0,
+                borrowingShare: (lastMetrics.modelBorrowing || 0) / Math.max(1, state.gdp),
+                debtRatio: lastMetrics.debtRatio || 0,
+                calibrationError: isCurrentCalibrationContext() ? getCalibrationDiagnostics(lastMetrics).avgAbsError : null,
+                gini: viewState.gini
+            } : null;
+
+            return {
+                version: APP_VERSION,
+                savedAt: new Date().toISOString(),
+                state: clone(state),
+                inputs: getInputSnapshot(),
+                viewState: { ...viewState },
+                calibration: { ...calibration },
+                officialSources: { ...officialSources },
+                sourceRegistry: clone(sourceRegistry),
+                forecastState: {
+                    source: forecastState.source,
+                    importedAt: forecastState.importedAt,
+                    worldBankSyncedAt: forecastState.worldBankSyncedAt,
+                    quality: forecastState.quality,
+                    backtest: forecastState.backtest,
+                    forecast: forecastState.forecast
+                },
+                kpis
+            };
+        }
+
+        function setComparisonBaseline() {
+            comparisonBaseline = getCurrentScenarioSnapshot();
+            localStorage.setItem('philFiscalEngineBaselineV10', JSON.stringify(comparisonBaseline));
+            renderComparisonPanel(true);
+            setScenarioStatus(`Baseline set for ${state.year}. You can now compare new slider mixes, shocks, or future years against it.`, 'good');
+        }
+
+        function compareToBaseline() {
+            if (!comparisonBaseline) {
+                try {
+                    const raw = localStorage.getItem('philFiscalEngineBaselineV10');
+                    if (raw) comparisonBaseline = JSON.parse(raw);
+                } catch (e) {
+                    comparisonBaseline = null;
+                }
+            }
+
+            if (!comparisonBaseline) {
+                setScenarioStatus('No baseline found yet. Click Set Base first, then change the model and Compare.', 'warn');
+                return;
+            }
+
+            renderComparisonPanel(true);
+            setScenarioStatus(`Compared current scenario against the ${comparisonBaseline.state.year} baseline.`, 'good');
+        }
+
+        function renderComparisonPanel(forceShow = false) {
+            const panel = document.getElementById('comparison-panel');
+            const grid = document.getElementById('comparison-grid');
+            const summary = document.getElementById('comparison-summary');
+            if (!panel || !grid || !summary) return;
+
+            if (!comparisonBaseline) {
+                if (!forceShow) panel.classList.add('hidden');
+                return;
+            }
+
+            const base = comparisonBaseline;
+            const items = [
+                { label: 'GDP', current: state.gdp, previous: base.state.gdp, higherGood: true, format: v => `₱${(v / 1000).toFixed(1)}T` },
+                { label: 'Rice', current: viewState.rice, previous: base.viewState.rice, higherGood: false, format: v => formatPeso(v, 2) },
+                { label: 'VECO', current: viewState.veco, previous: base.viewState.veco, higherGood: false, format: v => formatPeso(v, 0) },
+                { label: 'GINI', current: viewState.gini, previous: base.viewState.gini, higherGood: false, format: v => v.toFixed(3) },
+                { label: 'Growth', current: lastMetrics?.projection?.growthRate ?? 0, previous: base.kpis?.nextGrowth ?? 0, higherGood: true, format: v => `${(v * 100).toFixed(1)}%` },
+                { label: 'Borrowing', current: lastMetrics?.modelBorrowing ?? 0, previous: base.kpis?.modelBorrowing ?? 0, higherGood: false, format: v => formatPeso(v, 0) },
+                { label: 'Debt/GDP', current: lastMetrics?.debtRatio ?? 0, previous: base.kpis?.debtRatio ?? 0, higherGood: false, format: v => `${(v * 100).toFixed(1)}%` },
+                { label: 'Price Stress', current: state.priceStressMultiplier, previous: base.kpis?.priceStressMultiplier ?? base.kpis?.inflationMultiplier ?? 1, higherGood: false, format: v => `${v.toFixed(2)}x` },
+                { label: '4Ps', current: viewState.subsidy4ps, previous: base.viewState.subsidy4ps, higherGood: true, format: v => formatPeso(v, 0) },
+                { label: 'ER Wait', current: viewState.hospital, previous: base.viewState.hospital, higherGood: false, format: v => `${v.toFixed(1)}h` }
+            ];
+
+            grid.innerHTML = items.map(item => {
+                const delta = item.current - item.previous;
+                const neutral = Math.abs(delta) < 0.0001;
+                const good = item.higherGood ? delta > 0 : delta < 0;
+                const color = neutral ? 'text-slate-400' : good ? 'text-emerald-400' : 'text-rose-400';
+                const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
+                const formattedDelta = item.label === 'GINI'
+                    ? `${sign}${Math.abs(delta).toFixed(3)}`
+                    : item.label === 'Growth'
+                        ? `${sign}${(Math.abs(delta) * 100).toFixed(1)} pts`
+                        : item.label === 'Price Stress'
+                            ? `${sign}${Math.abs(delta).toFixed(2)}x`
+                            : item.label === 'GDP'
+                                ? `${sign}₱${(Math.abs(delta) / 1000).toFixed(1)}T`
+                                : item.label === 'ER Wait'
+                                    ? `${sign}${Math.abs(delta).toFixed(1)}h`
+                                    : `${sign}${formatPeso(Math.abs(delta), 0)}`;
+                return `
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">${item.label}</span>
+                        <span class="text-base font-mono font-bold text-white block">${item.format(item.current)}</span>
+                        <span class="text-[10px] font-bold ${color}">${neutral ? 'No change' : formattedDelta}</span>
+                    </div>`;
+            }).join('');
+
+            summary.textContent = `vs ${base.state.year} baseline`;
+            panel.classList.remove('hidden');
+        }
+
+        function applyOfficialCalibration() {
+            const t = getOfficialTargets();
+            const annualized2026 = t.annualizedRemittancePhpB;
+            state.admin = 'marcosJr';
+            state.year = officialSources.baselineYear;
+            state.gdp = t.gdp;
+            state.ofw = t.remittancePhpB;
+            state.ngDebtPhpB = officialSources.ngDebtPhpB;
+            state.baseRice = presets.marcosJr.baseRice;
+            state.baseVeco = presets.marcosJr.baseVeco;
+            state.shocks = { gdpDrop: 0, priceStressSpike: 0 };
+            state.dataSource = 'official-calibration';
+            state.syncedAt = new Date().toISOString();
+
+            const officialSliderMix = { topTax: 35, midTax: 15, corpTax: 25, vatTax: 12, socialSpend: 38, infraSpend: 29 };
+            Object.keys(inputs).forEach(id => { inputs[id].value = officialSliderMix[id]; });
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            updateHeader();
+            updateEngine({ resetDelta: true });
+            setScenarioStatus('Official 2026 calibration loaded: GDP, revenue/deficit anchors, debt stock, and OFW remittance scale are now aligned.', 'good');
+        }
+
+        function simulateScenarioFor(overrides = {}) {
+            const vals = lastVals ? { ...lastVals, ...overrides } : readInputValues();
+            const localState = state;
+            const corpTotal = localState.gdp * calibration.corporateOutputShare;
+            const corpTaxableSurplus = corpTotal * calibration.corpTaxableSurplusShare;
+            const stateFromCorp = corpTaxableSurplus * vals.corpTax * calibration.corpTaxCompliance;
+            const netCorp = corpTotal - stateFromCorp;
+            const tycoonRetained = netCorp * 0.62;
+            const taxFromTycoons = tycoonRetained * vals.topTax * calibration.eliteIncomeTaxExposure * calibration.eliteTaxCompliance;
+            const midInitial = localState.gdp * calibration.middleIncomeShare;
+            const midOfw = localState.ofw * 0.40;
+            const midTotal = midInitial + midOfw;
+            const taxFromMid = midInitial * vals.midTax * calibration.middleIncomeTaxCompliance;
+            const midSpendable = midTotal - taxFromMid;
+            const vatFromMid = midSpendable * vals.vatTax * calibration.middleVatExposure * calibration.vatCollectionEfficiency;
+            const poorInitial = localState.gdp * calibration.workingPoorIncomeShare;
+            const poorOfw = localState.ofw * 0.60;
+            const poorTotal = poorInitial + poorOfw;
+            const vatFromPoor = poorTotal * vals.vatTax * calibration.poorVatExposure * calibration.vatCollectionEfficiency;
+            const otherGovRevenue = localState.gdp * calibration.otherGovRevenueShare;
+            const treasuryTotal = stateFromCorp + taxFromTycoons + taxFromMid + vatFromMid + vatFromPoor + otherGovRevenue;
+            const t = getOfficialTargets();
+            const revenueCredibility = clamp(0.35, (treasuryTotal / Math.max(1, localState.gdp)) / Math.max(0.01, t.revenueShare), 1.10);
+            const debtRatioBeforeBorrowing = (localState.ngDebtPhpB ?? officialSources.ngDebtPhpB) / Math.max(1, localState.gdp);
+            const debtPenalty = debtRatioBeforeBorrowing > calibration.debtWarningShare
+                ? clamp(0.55, 1 - ((debtRatioBeforeBorrowing - calibration.debtWarningShare) * 1.6), 1)
+                : 1;
+            const modelBorrowing = Math.min(localState.gdp * calibration.borrowingStressLimitShare, t.deficit * revenueCredibility * debtPenalty);
+            const budgetEnvelope = treasuryTotal + modelBorrowing;
+            const projection = calculateProjection(vals);
+            const debtRatio = ((localState.ngDebtPhpB ?? officialSources.ngDebtPhpB) + modelBorrowing) / Math.max(1, localState.gdp);
+            return { vals, treasuryTotal, modelBorrowing, budgetEnvelope, projection, debtRatio };
+        }
+
+        function runSensitivityAudit() {
+            const panel = document.getElementById('sensitivity-panel');
+            const grid = document.getElementById('sensitivity-grid');
+            const summary = document.getElementById('sensitivity-summary');
+            if (!panel || !grid || !lastVals) return;
+
+            const base = simulateScenarioFor({});
+            const cases = [
+                { label: '+2 VAT pts', overrides: { vatTax: clamp(0, lastVals.vatTax + 0.02, 0.25) } },
+                { label: '−2 VAT pts', overrides: { vatTax: clamp(0, lastVals.vatTax - 0.02, 0.25) } },
+                { label: '+5 social pts', overrides: { socialSpend: clamp(0.05, lastVals.socialSpend + 0.05, 0.70), infraSpend: clamp(0.05, lastVals.infraSpend - 0.05, 0.60) } },
+                { label: '+5 infra pts', overrides: { infraSpend: clamp(0.05, lastVals.infraSpend + 0.05, 0.60), socialSpend: clamp(0.05, lastVals.socialSpend - 0.05, 0.70) } },
+                { label: '+5 corp tax pts', overrides: { corpTax: clamp(0.05, lastVals.corpTax + 0.05, 0.50) } },
+                { label: '+5 elite tax pts', overrides: { topTax: clamp(0.05, lastVals.topTax + 0.05, 0.75) } }
+            ];
+
+            grid.innerHTML = cases.map(c => {
+                const m = simulateScenarioFor(c.overrides);
+                const revenueDelta = m.treasuryTotal - base.treasuryTotal;
+                const growthDelta = m.projection.growthRate - base.projection.growthRate;
+                const signRevenue = revenueDelta >= 0 ? '+' : '−';
+                const signGrowth = growthDelta >= 0 ? '+' : '−';
+                return `
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
+                        <div class="text-xs font-bold text-white mb-1">${c.label}</div>
+                        <div class="text-[11px] text-slate-400">Revenue: <span class="font-mono ${revenueDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${signRevenue}${formatPeso(Math.abs(revenueDelta), 0)}</span></div>
+                        <div class="text-[11px] text-slate-400">Growth: <span class="font-mono ${growthDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${signGrowth}${(Math.abs(growthDelta) * 100).toFixed(2)} pts</span></div>
+                    </div>`;
+            }).join('');
+            summary.textContent = `Base revenue ${formatPeso(base.treasuryTotal, 0)} / growth ${(base.projection.growthRate * 100).toFixed(1)}%`;
+            panel.classList.remove('hidden');
+            setScenarioStatus('Sensitivity audit generated. Use this to explain which levers matter most before presenting a scenario.', 'good');
+        }
+
+        function exportAuditPack() {
+            const snapshot = getCurrentScenarioSnapshot();
+            snapshot.audit = {
+                officialTargets: getOfficialTargets(),
+                calibrationDiagnostics: (lastMetrics && isCurrentCalibrationContext()) ? getCalibrationDiagnostics(lastMetrics) : null,
+                sourceNotes: officialSources.sourceNotes,
+                sourceRegistry: sourceRegistry,
+                forecastQuality: forecastState.quality,
+                evidenceDiagnostics: forecastState.quality?.evidence || getEvidenceDiagnostics(),
+                evidenceSchema: { requiredForecastColumns, evidenceRequiredColumns, evidenceMetadataColumns, evidenceDataDictionary },
+                forecastBacktest: forecastState.backtest,
+                forecastOutput: forecastState.forecast,
+                limitations: [
+                    'Not a statutory budget calculator.',
+                    'Not a tax-advice model.',
+                    'Inequality, household prices, ER wait, class size, and 4Ps are synthetic proxies.',
+                    'Evidence-grade means every row must include source owner, dataset, source URL, release/vintage dates, row status, unit basis, and transform notes.',
+                    'Use for calibrated scenario discussion; official forecasting requires agency-approved data and model review.',
+                    'V10.6.3 supports real-time Household Reality updates, private capital recycling, era-specific growth anchors, calibration-context warnings, evidence CSV ingestion, row-level provenance validation, corrected backtesting, partial-year filtering, uncertainty bands, and patched spending-share treatment, but it is not a certified government model by itself.',
+                    'For academic use, cite the imported dataset, keep the audit pack, and disclose model error bands.'
+                ]
+            };
+            const stamp = new Date().toISOString().slice(0, 10);
+            downloadTextFile(`${EXPORT_SLUG}-audit-pack-${state.year}-${stamp}.json`, JSON.stringify(snapshot, null, 2), 'application/json');
+            setScenarioStatus('Exported audit pack with official targets, assumptions, diagnostics, and limitations.', 'good');
+        }
+
+        function exportScenario(format) {
+            const snapshot = getCurrentScenarioSnapshot();
+            const stamp = new Date().toISOString().slice(0, 10);
+
+            if (format === 'json') {
+                downloadTextFile(`${EXPORT_SLUG}-${state.year}-${stamp}.json`, JSON.stringify(snapshot, null, 2), 'application/json');
+                setScenarioStatus('Exported current scenario as JSON.', 'good');
+                return;
+            }
+
+            const rows = [
+                ['section', 'field', 'value'],
+                ['state', 'year', state.year],
+                ['state', 'gdp_php_billions', state.gdp.toFixed(2)],
+                ['state', 'ofw_php_billions', state.ofw.toFixed(2)],
+                ['state', 'price_stress_multiplier', state.priceStressMultiplier.toFixed(3)],
+                ['state', 'data_source', state.dataSource || 'preset'],
+                ['state', 'model_scope', 'calibration-grade scenario lab; not certified forecast'],
+                ['official', 'target_revenue_php_b', getOfficialTargets().revenue.toFixed(2)],
+                ['official', 'target_budget_php_b', getOfficialTargets().budget.toFixed(2)],
+                ['official', 'target_deficit_php_b', getOfficialTargets().deficit.toFixed(2)],
+                ['official', 'ng_debt_php_b', getOfficialTargets().debtPhpB.toFixed(2)],
+                ['inputs', 'elite_tax_pct', inputs.topTax.value],
+                ['inputs', 'middle_tax_pct', inputs.midTax.value],
+                ['inputs', 'corporate_tax_pct', inputs.corpTax.value],
+                ['inputs', 'vat_pct', inputs.vatTax.value],
+                ['inputs', 'social_spend_pct', inputs.socialSpend.value],
+                ['inputs', 'infra_spend_pct', inputs.infraSpend.value],
+                ['household', 'rice_php_per_kg', viewState.rice.toFixed(2)],
+                ['household', 'veco_bill_php', viewState.veco.toFixed(0)],
+                ['household', 'er_wait_hours', viewState.hospital.toFixed(1)],
+                ['household', 'school_class_size', viewState.school],
+                ['household', '4ps_monthly_php', viewState.subsidy4ps],
+                ['kpi', 'gini', viewState.gini.toFixed(3)],
+                ['kpi', 'next_growth_pct', ((lastMetrics?.projection?.growthRate ?? 0) * 100).toFixed(2)],
+                ['kpi', 'model_borrowing_php_b', (lastMetrics?.modelBorrowing ?? 0).toFixed(2)],
+                ['kpi', 'debt_to_gdp_pct', ((lastMetrics?.debtRatio ?? 0) * 100).toFixed(2)],
+                ['kpi', 'avg_calibration_error_pct', (lastMetrics && isCurrentCalibrationContext()) ? (getCalibrationDiagnostics(lastMetrics).avgAbsError * 100).toFixed(2) : 'N/A'],
+                ['calibration', 'corp_taxable_surplus_share', calibration.corpTaxableSurplusShare],
+                ['calibration', 'middle_vat_exposure', calibration.middleVatExposure],
+                ['calibration', 'poor_vat_exposure', calibration.poorVatExposure],
+                ['calibration', 'rice_vat_pass_through', calibration.riceVatPassThrough]
+            ];
+            const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
+            downloadTextFile(`${EXPORT_SLUG}-${state.year}-${stamp}.csv`, csv, 'text/csv');
+            setScenarioStatus('Exported current scenario as CSV.', 'good');
+        }
+
+        function downloadTextFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function applyPolicyRecipe(kind) {
+            const recipes = {
+                balanced: { topTax: 38, midTax: 16, corpTax: 25, vatTax: 10, socialSpend: 40, infraSpend: 30, label: 'Balanced reform mix applied.' },
+                growth: { topTax: 32, midTax: 14, corpTax: 22, vatTax: 10, socialSpend: 32, infraSpend: 42, label: 'Growth push applied: stronger infrastructure, lighter tax drag.' },
+                relief: { topTax: 45, midTax: 12, corpTax: 28, vatTax: 8, socialSpend: 48, infraSpend: 25, label: 'Household relief mix applied: lower VAT, higher social buffer.' },
+                repair: { topTax: 40, midTax: 18, corpTax: 28, vatTax: 12, socialSpend: 30, infraSpend: 25, label: 'Fiscal repair mix applied: wider debt/admin cushion.' }
+            };
+            const recipe = recipes[kind];
+            if (!recipe) return;
+
+            prevViewState = { ...viewState };
+            Object.keys(inputs).forEach(id => {
+                if (recipe[id] !== undefined) inputs[id].value = recipe[id];
+            });
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            updateEngine();
+            setScenarioStatus(recipe.label, 'good');
+        }
+
+        function autoBalanceBudget() {
+            prevViewState = { ...viewState };
+            let social = Number(inputs.socialSpend.value);
+            let infra = Number(inputs.infraSpend.value);
+            let excess = social + infra - 85;
+
+            if (excess <= 0) {
+                setScenarioStatus('Budget already leaves at least 15% for debt/admin. No auto-balance needed.', 'good');
+                updateEngine();
+                return;
+            }
+
+            const infraCut = Math.min(excess, Math.max(0, infra - 5));
+            infra -= infraCut;
+            excess -= infraCut;
+
+            if (excess > 0) {
+                const socialCut = Math.min(excess, Math.max(0, social - 5));
+                social -= socialCut;
+            }
+
+            inputs.socialSpend.value = Math.round(social);
+            inputs.infraSpend.value = Math.round(infra);
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            updateEngine();
+            setScenarioStatus('Auto-balanced budget to protect the 15% debt/admin floor.', 'good');
+        }
+
+
+        let sliderLiveFrame = null;
+        let sliderHeavyTimer = null;
+        let householdLiveTimer = null;
+
+        function flashHouseholdMetric(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('impact-live-pop');
+            window.setTimeout(() => el.classList.remove('impact-live-pop'), 140);
+        }
+
+        function updateHouseholdLiveSummary(metrics, vals) {
+            const badge = document.getElementById('household-live-badge');
+            const summary = document.getElementById('household-live-summary');
+            if (badge) {
+                badge.textContent = 'Updating';
+                badge.classList.add('is-updating');
+                window.clearTimeout(householdLiveTimer);
+                householdLiveTimer = window.setTimeout(() => {
+                    badge.textContent = 'Live';
+                    badge.classList.remove('is-updating');
+                }, 520);
+            }
+
+            ['impact-rice', 'impact-veco', 'impact-hospital', 'impact-school', 'impact-4ps'].forEach(flashHouseholdMetric);
+
+            if (!summary) return;
+            const riceDelta = viewState.rice - (prevViewState?.rice ?? viewState.rice);
+            const vecoDelta = viewState.veco - (prevViewState?.veco ?? viewState.veco);
+            const hospitalDelta = viewState.hospital - (prevViewState?.hospital ?? viewState.hospital);
+            const schoolDelta = viewState.school - (prevViewState?.school ?? viewState.school);
+            const aidDelta = viewState.subsidy4ps - (prevViewState?.subsidy4ps ?? viewState.subsidy4ps);
+
+            const parts = [];
+            if (Math.abs(riceDelta) >= 0.50) parts.push(`rice ${riceDelta > 0 ? 'up' : 'down'} ${formatPeso(Math.abs(riceDelta), 2)}`);
+            if (Math.abs(vecoDelta) >= 10) parts.push(`electric bill ${vecoDelta > 0 ? 'up' : 'down'} ${formatPeso(Math.abs(vecoDelta), 0)}`);
+            if (Math.abs(hospitalDelta) >= 0.1) parts.push(`ER wait ${hospitalDelta > 0 ? 'longer' : 'shorter'} by ${Math.abs(hospitalDelta).toFixed(1)} hr`);
+            if (Math.abs(schoolDelta) >= 1) parts.push(`class size ${schoolDelta > 0 ? 'larger' : 'smaller'} by ${Math.abs(schoolDelta).toFixed(0)}`);
+            if (Math.abs(aidDelta) >= 50) parts.push(`4Ps aid ${aidDelta > 0 ? 'up' : 'down'} ${formatPeso(Math.abs(aidDelta), 0)}`);
+
+            const stressText = state.priceStressMultiplier > 1.05
+                ? ` Price stress multiplier: ${state.priceStressMultiplier.toFixed(2)}x.`
+                : ' Fiscal stress is currently contained.';
+
+            summary.textContent = parts.length
+                ? `Live change: ${parts.slice(0, 3).join(', ')}.${stressText}`
+                : `Move a slider to compare household effects against the current baseline.${stressText}`;
+        }
+
+        function scheduleSliderUpdate() {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+
+            if (sliderLiveFrame) cancelAnimationFrame(sliderLiveFrame);
+            sliderLiveFrame = requestAnimationFrame(() => {
+                sliderLiveFrame = null;
+                updateEngine({ liveOnly: true });
+            });
+
+            window.clearTimeout(sliderHeavyTimer);
+            sliderHeavyTimer = window.setTimeout(() => {
+                updateEngine({ resetDelta: false });
+            }, 180);
+        }
+
+        function commitSliderUpdate() {
+            if (sliderLiveFrame) {
+                cancelAnimationFrame(sliderLiveFrame);
+                sliderLiveFrame = null;
+            }
+            window.clearTimeout(sliderHeavyTimer);
+            updateEngine({ resetDelta: false });
+        }
+
+
+        function updateDeltaUI(id, current, previous, lowerIsBetter = true, currency = false, decimals = 1) {
+            const el = document.getElementById(id);
+            if (!el || previous === undefined || previous === null) return;
+
+            const delta = current - previous;
+            const absDelta = Math.abs(delta);
+            const tiny = currency ? 0.5 : 0.05;
+
+            if (absDelta < tiny) {
+                el.textContent = '(--)';
+                el.className = 'delta-neutral';
+                return;
+            }
+
+            const isGood = lowerIsBetter ? delta < 0 : delta > 0;
+            const sign = delta > 0 ? '+' : '−';
+            const displayValue = currency
+                ? formatPeso(absDelta, 0)
+                : absDelta.toLocaleString('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+
+            el.textContent = `(${sign}${displayValue})`;
+            el.className = isGood ? 'delta-good' : 'delta-bad';
+        }
+
+        function updateEngine(options = {}) {
+            const vals = readInputValues();
+
+            if ((vals.socialSpend + vals.infraSpend) > 0.95) {
+                inputs.infraSpend.value = Math.floor((0.95 - vals.socialSpend) * 100);
+                updateEngine(options);
+                return;
+            }
+
+            updateHeader();
+
+            const corpTotal = state.gdp * calibration.corporateOutputShare;
+            const corpTaxableSurplus = corpTotal * calibration.corpTaxableSurplusShare;
+            const stateFromCorp = corpTaxableSurplus * vals.corpTax * calibration.corpTaxCompliance;
+            const netCorp = corpTotal - stateFromCorp;
+            const tycoonRetained = netCorp * 0.65;
+            const corpRetained = netCorp * 0.35;
+            const taxFromTycoons = tycoonRetained * vals.topTax * calibration.eliteIncomeTaxExposure * calibration.eliteTaxCompliance;
+            const finalTycoon = tycoonRetained - taxFromTycoons;
+            const privateCapitalGross = Math.max(0, finalTycoon + corpRetained);
+            const privateCapitalFlows = calculatePrivateCapitalFlows(privateCapitalGross);
+
+            const midInitial = state.gdp * calibration.middleIncomeShare;
+            const midOfw = state.ofw * 0.40;
+            const midTotal = midInitial + midOfw;
+            const taxFromMid = midInitial * vals.midTax * calibration.middleIncomeTaxCompliance;
+            const midSpendable = midTotal - taxFromMid;
+            const vatFromMid = midSpendable * vals.vatTax * calibration.middleVatExposure * calibration.vatCollectionEfficiency;
+            const finalMid = midSpendable - vatFromMid;
+
+            const poorInitial = state.gdp * calibration.workingPoorIncomeShare;
+            const poorOfw = state.ofw * 0.60;
+            const poorTotal = poorInitial + poorOfw;
+            const vatFromPoor = Math.min(poorTotal, poorTotal * vals.vatTax * calibration.poorVatExposure * calibration.vatCollectionEfficiency);
+            const finalPoor = poorTotal - vatFromPoor;
+
+            const otherGovRevenue = state.gdp * calibration.otherGovRevenueShare;
+            const treasuryTotal = stateFromCorp + taxFromTycoons + privateCapitalFlows.taxCapture + taxFromMid + vatFromMid + vatFromPoor + otherGovRevenue;
+            const officialTargets = getOfficialTargets();
+            const revenueTakeBeforeBorrowing = treasuryTotal / Math.max(1, state.gdp);
+            const revenueCredibility = clamp(0.35, revenueTakeBeforeBorrowing / Math.max(0.01, officialTargets.revenueShare), 1.10);
+            const debtRatioBeforeBorrowing = (state.ngDebtPhpB ?? officialSources.ngDebtPhpB) / Math.max(1, state.gdp);
+            const debtPenalty = debtRatioBeforeBorrowing > calibration.debtWarningShare
+                ? clamp(0.55, 1 - ((debtRatioBeforeBorrowing - calibration.debtWarningShare) * 1.6), 1)
+                : 1;
+            const modelBorrowing = calibration.deficitFinancingEnabled
+                ? Math.min(state.gdp * calibration.borrowingStressLimitShare, officialTargets.deficit * revenueCredibility * debtPenalty)
+                : 0;
+            const budgetEnvelope = treasuryTotal + modelBorrowing;
+            const socialSpend = budgetEnvelope * vals.socialSpend;
+            const infraSpend = budgetEnvelope * vals.infraSpend;
+            const debtSpend = budgetEnvelope - socialSpend - infraSpend;
+
+            const minDebtReq = budgetEnvelope * calibration.debtAdminTargetShare;
+            const debtAdminStress = debtSpend < minDebtReq
+                ? Math.min(1.0, (minDebtReq / Math.max(1, debtSpend)) - 1)
+                : 0;
+            const deficitStress = Math.max(0, (modelBorrowing / Math.max(1, state.gdp)) - officialTargets.deficitShare) * 8;
+            const debtRatio = (state.ngDebtPhpB ?? officialSources.ngDebtPhpB) / Math.max(1, state.gdp);
+            const projectedDebtRatio = ((state.ngDebtPhpB ?? officialSources.ngDebtPhpB) + modelBorrowing) / Math.max(1, state.gdp);
+            const debtStressThreshold = Math.max(calibration.debtWarningShare, officialTargets.debtShare + 0.05);
+            const debtStockStress = Math.max(0, projectedDebtRatio - debtStressThreshold) * 1.5;
+            const fiscalPriceStress = 1 + debtAdminStress + deficitStress + debtStockStress;
+
+            state.priceStressMultiplier = clamp(0.8, fiscalPriceStress + state.shocks.priceStressSpike, 2.3);
+
+            const impactCard = document.getElementById('impact-card');
+            const warning = document.getElementById('deficit-warning');
+            const riceCause = document.getElementById('rice-cause');
+
+            if (state.priceStressMultiplier > 1.05) {
+                warning.classList.remove('hidden');
+                impactCard.classList.add('border-rose-900', 'bg-rose-950/20');
+                document.getElementById('impact-header-line').className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-rose-700';
+                riceCause.innerText = 'VAT + PRICE STRESS';
+                riceCause.classList.add('text-rose-400');
+            } else {
+                warning.classList.add('hidden');
+                impactCard.classList.remove('border-rose-900', 'bg-rose-950/20');
+                document.getElementById('impact-header-line').className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500';
+                riceCause.innerText = 'VAT Base';
+                riceCause.classList.remove('text-rose-400');
+            }
+
+            viewState.rice = state.baseRice * (1 + vals.vatTax * calibration.riceVatPassThrough) * state.priceStressMultiplier;
+            viewState.veco = state.baseVeco * (1 + vals.vatTax * calibration.powerVatPassThrough) * state.priceStressMultiplier;
+            viewState.hospital = clamp(1, calibration.hospitalReferenceHours * (calibration.socialReferenceShare / Math.max(0.01, vals.socialSpend)), 24);
+            viewState.school = Math.round(clamp(15, calibration.schoolReferenceClassSize * (calibration.socialReferenceShare / Math.max(0.01, vals.socialSpend)), 80));
+            viewState.subsidy4ps = Math.round(calibration.fourPsReferenceGrant * (vals.socialSpend / calibration.socialReferenceShare));
+
+            const wPoor = finalPoor + (socialSpend * 0.75);
+            const wMid = finalMid + (socialSpend * 0.25);
+            const wElite = privateCapitalFlows.privateNet;
+            const wTotal = Math.max(1, wPoor + wMid + wElite);
+
+            const lorenzData = [
+                { pop: 0, wealth: 0 },
+                { pop: 0.70, wealth: wPoor / wTotal },
+                { pop: 0.99, wealth: (wPoor + wMid) / wTotal },
+                { pop: 1.0, wealth: 1.0 }
+            ];
+
+            let area = 0;
+            for (let i = 0; i < lorenzData.length - 1; i++) {
+                const segmentWidth = lorenzData[i + 1].pop - lorenzData[i].pop;
+                const avgHeight = (lorenzData[i + 1].wealth + lorenzData[i].wealth) / 2;
+                area += segmentWidth * avgHeight;
+            }
+            viewState.gini = clamp(0, (0.5 - area) / 0.5, 1);
+
+            if (options.resetDelta) {
+                prevViewState = { ...viewState };
+                prevState = clone(state);
+            }
+
+            document.getElementById('impact-rice').innerText = formatPeso(viewState.rice, 2);
+            document.getElementById('impact-rice').className = state.priceStressMultiplier > 1.2 ? 'text-xl font-bold text-rose-500' : 'text-xl font-bold text-white';
+            updateDeltaUI('delta-rice', viewState.rice, prevViewState.rice, true, true, 0);
+
+            document.getElementById('impact-veco').innerText = formatPeso(viewState.veco, 0);
+            updateDeltaUI('delta-veco', viewState.veco, prevViewState.veco, true, true, 0);
+
+            document.getElementById('impact-hospital').innerText = `${viewState.hospital.toFixed(1)} Hrs`;
+            document.getElementById('impact-hospital').className = viewState.hospital > 8 ? 'text-xl font-bold text-rose-500' : 'text-xl font-bold text-emerald-400';
+            updateDeltaUI('delta-hospital', viewState.hospital, prevViewState.hospital, true, false, 1);
+
+            document.getElementById('impact-school').innerText = `${viewState.school}`;
+            document.getElementById('impact-school').className = viewState.school > 55 ? 'text-xl font-bold text-rose-500' : 'text-xl font-bold text-emerald-400';
+            updateDeltaUI('delta-school', viewState.school, prevViewState.school, true, false, 0);
+
+            document.getElementById('impact-4ps').innerText = formatPeso(viewState.subsidy4ps, 0);
+            updateDeltaUI('delta-4ps', viewState.subsidy4ps, prevViewState.subsidy4ps, false, true, 0);
+
+            const giniEl = document.getElementById('gini-score');
+            giniEl.innerText = `GINI: ${viewState.gini.toFixed(3)}`;
+            if (viewState.gini > 0.45) giniEl.className = 'text-xs font-mono font-bold text-rose-500 bg-rose-900/30 px-2 py-1 rounded';
+            else if (viewState.gini > 0.35) giniEl.className = 'text-xs font-mono font-bold text-amber-400 bg-amber-900/30 px-2 py-1 rounded';
+            else giniEl.className = 'text-xs font-mono font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded';
+
+            const projection = applyPrivateCapitalGrowthBoost(calculateProjection(vals), privateCapitalFlows.privateInvestmentShare);
+            const metrics = { treasuryTotal, modelBorrowing, budgetEnvelope, debtSpend, minDebtReq, socialSpend, infraSpend, debtRatio, projectedDebtRatio, officialTargets, projection, privateCapitalFlows, privateInvestmentShare: privateCapitalFlows.privateInvestmentShare };
+            lastMetrics = metrics;
+            lastVals = { ...vals };
+            updateHouseholdLiveSummary(metrics, vals);
+
+            // During slider drag, repaint the household card immediately and defer heavy panels/SVG redraw.
+            if (options.liveOnly) {
+                return metrics;
+            }
+
+            updateKPIs(metrics);
+            updatePrivateCapitalPanel(metrics);
+            renderPolicyNotes(metrics, vals);
+            updateModelGovernance(metrics, vals);
+            updateRealityAudit(metrics, vals);
+            renderComparisonPanel(false);
+            renderForecastingLab();
+
+            const nodes = [
+                { id: 'gdp', label: 'Domestic GDP', col: 0, color: '#475569' },
+                { id: 'ofw', label: 'OFW Remittances', col: 0, color: '#a855f7' },
+                { id: 'borrowing', label: 'Borrowing / Financing', col: 0, color: '#f97316' },
+                { id: 'corp', label: 'Corporate Yield', col: 1, color: '#334155' },
+                { id: 'mid', label: 'Middle Class', col: 1, color: '#2563eb' },
+                { id: 'poor', label: 'Working Poor', col: 1, color: '#1d4ed8' },
+                { id: 'elite_eq', label: 'Tycoon Equity', col: 2, color: '#059669' },
+                { id: 'mid_eq', label: 'Mid-Class Net', col: 2, color: '#60a5fa' },
+                { id: 'poor_eq', label: 'Poor Net', col: 2, color: '#93c5fd' },
+                { id: 'treasury', label: 'Treasury / BIR', col: 3, color: '#94a3b8' },
+                { id: 'private_invest', label: 'Private Investment', col: 3, color: '#10b981' },
+                { id: 'luxury_cons', label: 'Luxury Consumption', col: 3, color: '#38bdf8' },
+                { id: 'asset_offshore', label: 'Assets / Offshore', col: 3, color: '#f59e0b' },
+                { id: 'social', label: 'Social Services', col: 4, color: '#3b82f6' },
+                { id: 'infra', label: 'Capital Infra', col: 4, color: '#06b6d4' },
+                { id: 'debt', label: 'Debt & Admin', col: 4, color: '#f43f5e' }
+            ];
+
+            const links = [
+                { source: 'gdp', target: 'corp', value: corpTotal, desc: 'Domestic corporate generation' },
+                { source: 'gdp', target: 'mid', value: midInitial, desc: 'Domestic formal salaries' },
+                { source: 'gdp', target: 'poor', value: poorInitial, desc: 'Domestic informal income' },
+                { source: 'ofw', target: 'mid', value: midOfw, desc: 'Remittances to middle-class households' },
+                { source: 'ofw', target: 'poor', value: poorOfw, desc: 'Remittances to working-poor households' },
+                { source: 'borrowing', target: 'treasury', value: modelBorrowing, desc: 'Deficit financing / borrowing capacity proxy' },
+                { source: 'gdp', target: 'treasury', value: otherGovRevenue, desc: 'Other tax and non-tax revenue proxy' },
+                { source: 'corp', target: 'treasury', value: stateFromCorp, desc: 'Corporate Income Tax on taxable surplus proxy' },
+                { source: 'corp', target: 'treasury', value: taxFromTycoons, desc: 'Elite top-bracket income tax' },
+                { source: 'corp', target: 'elite_eq', value: privateCapitalFlows.gross, desc: 'Retained post-tax wealth and dividends before capital recycling' },
+                { source: 'elite_eq', target: 'treasury', value: privateCapitalFlows.taxCapture, desc: 'Wealth/capital tax capture returned to the public budget' },
+                { source: 'elite_eq', target: 'private_invest', value: privateCapitalFlows.reinvestment, desc: 'Private capital recycled into businesses, expansion, jobs, and productivity' },
+                { source: 'elite_eq', target: 'luxury_cons', value: privateCapitalFlows.consumption, desc: 'High-income consumption that may support services and indirect taxes' },
+                { source: 'elite_eq', target: 'asset_offshore', value: privateCapitalFlows.assetsOffshore, desc: 'Asset holdings, portfolio accumulation, idle capital, or offshore-style leakage' },
+                { source: 'mid', target: 'treasury', value: taxFromMid + vatFromMid, desc: 'Effective income tax plus VAT exposure' },
+                { source: 'mid', target: 'mid_eq', value: finalMid, desc: 'Take-home spending power' },
+                { source: 'poor', target: 'treasury', value: vatFromPoor, desc: 'Effective VAT/pass-through burden proxy' },
+                { source: 'poor', target: 'poor_eq', value: finalPoor, desc: 'Survival spending power' },
+                { source: 'treasury', target: 'social', value: socialSpend, desc: 'Health, education, and 4Ps allocation' },
+                { source: 'treasury', target: 'infra', value: infraSpend, desc: 'Roads, bridges, ports, and public works' },
+                { source: 'treasury', target: 'debt', value: debtSpend, desc: 'Sovereign debt service and overhead' }
+            ];
+
+            renderVanillaSankey(nodes, links);
+            renderVanillaLorenz(lorenzData);
+        }
+
+        function renderVanillaSankey(nodes, links) {
+            const svg = document.getElementById('sankey-svg');
+            const container = document.getElementById('sankey-container');
+            svg.innerHTML = '';
+
+            const width = svg.clientWidth || container.clientWidth || 700;
+            const height = svg.clientHeight || container.clientHeight || 390;
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+            const colCount = Math.max(1, Math.max(...nodes.map(n => Number(n.col) || 0)) + 1);
+            const nodeWidth = 24;
+            const padding = 12;
+            const nodeMap = {};
+
+            nodes.forEach(n => {
+                n.valIn = 0;
+                n.valOut = 0;
+                nodeMap[n.id] = n;
+            });
+
+            links.forEach(l => {
+                nodeMap[l.source].valOut += l.value;
+                nodeMap[l.target].valIn += l.value;
+            });
+
+            const colSums = Array.from({ length: colCount }, () => 0);
+            nodes.forEach(n => {
+                n.value = Math.max(n.valIn, n.valOut);
+                colSums[n.col] += n.value;
+            });
+
+            const maxColVal = Math.max(...colSums, 1);
+            const columnIndexes = Array.from({ length: colCount }, (_, i) => i);
+            const maxNodesInCol = Math.max(1, ...columnIndexes.map(c => nodes.filter(n => Number(n.col) === c).length));
+            const availableHeight = Math.max(120, height - (padding * Math.max(0, maxNodesInCol - 1)));
+            const pxPerVal = availableHeight / maxColVal;
+            const colY = Array.from({ length: colCount }, () => 0);
+            const xStep = colCount > 1 ? ((width - nodeWidth) / (colCount - 1)) : 0;
+
+            nodes.forEach(n => {
+                const colIndex = clamp(0, Number(n.col) || 0, colCount - 1);
+                n.col = colIndex;
+                n.h = Math.max(2, n.value * pxPerVal);
+                n.w = nodeWidth;
+                n.x = colIndex * xStep;
+                n.y = colY[colIndex];
+                n.currentOutY = n.y;
+                n.currentInY = n.y;
+                colY[colIndex] += n.h + padding;
+            });
+
+            const tooltip = document.getElementById('chart-tooltip');
+
+            links.forEach(l => {
+                const src = nodeMap[l.source];
+                const tgt = nodeMap[l.target];
+                const linkH = Math.max(1, l.value * pxPerVal);
+                const startX = src.x + src.w;
+                const startY = src.currentOutY + (linkH / 2);
+                src.currentOutY += linkH;
+                const endX = tgt.x;
+                const endY = tgt.currentInY + (linkH / 2);
+                tgt.currentInY += linkH;
+                const midX = (startX + endX) / 2;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`);
+                path.setAttribute('stroke', src.color);
+                path.setAttribute('stroke-width', linkH);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-opacity', '0.25');
+                path.setAttribute('class', 'link-path');
+
+                path.addEventListener('mousemove', (e) => {
+                    const box = tooltip.offsetParent.getBoundingClientRect();
+                    tooltip.style.opacity = '1';
+                    tooltip.style.left = `${e.clientX - box.left + 15}px`;
+                    tooltip.style.top = `${e.clientY - box.top - 20}px`;
+                    tooltip.innerHTML = `
+                        <div class="font-bold border-b border-slate-600 pb-1 mb-1">${src.label} &rarr; ${tgt.label}</div>
+                        <div class="text-emerald-400 font-mono font-bold mb-0.5">₱${(l.value / 1000).toFixed(2)} Trillion</div>
+                        <div class="text-slate-300 text-[10px] leading-tight mt-1">${l.desc}</div>`;
+                });
+                path.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+                svg.appendChild(path);
+            });
+
+            nodes.forEach(n => {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', n.x);
+                rect.setAttribute('y', n.y);
+                rect.setAttribute('width', n.w);
+                rect.setAttribute('height', n.h);
+                rect.setAttribute('fill', n.color);
+                rect.setAttribute('rx', '2');
+                svg.appendChild(rect);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const isLeft = n.col < 2;
+                text.setAttribute('x', isLeft ? n.x + n.w + 6 : n.x - 6);
+                text.setAttribute('y', n.y + (n.h / 2));
+                text.setAttribute('dy', '0.35em');
+                text.setAttribute('text-anchor', isLeft ? 'start' : 'end');
+                text.setAttribute('fill', '#f8fafc');
+                text.setAttribute('font-size', '10px');
+                text.setAttribute('font-weight', '600');
+                text.textContent = n.label;
+                svg.appendChild(text);
+            });
+        }
+
+        function renderVanillaLorenz(data) {
+            const svg = document.getElementById('lorenz-svg');
+            const container = document.getElementById('lorenz-container');
+            svg.innerHTML = '';
+
+            const w = svg.clientWidth || container.clientWidth || 260;
+            const h = svg.clientHeight || container.clientHeight || 190;
+            svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+            const x = (val) => val * w;
+            const y = (val) => h - (val * h);
+
+            const eqLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            eqLine.setAttribute('x1', x(0));
+            eqLine.setAttribute('y1', y(0));
+            eqLine.setAttribute('x2', x(1));
+            eqLine.setAttribute('y2', y(1));
+            eqLine.setAttribute('stroke', '#64748b');
+            eqLine.setAttribute('stroke-dasharray', '4');
+            svg.appendChild(eqLine);
+
+            const dStr = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${x(d.pop)} ${y(d.wealth)}`).join(' ');
+            const fillPoints = data.map(d => `${x(d.pop)},${y(d.wealth)}`).join(' ') + ` ${x(1)},${y(0)} ${x(0)},${y(0)}`;
+
+            const fill = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            fill.setAttribute('points', fillPoints);
+            fill.setAttribute('fill', 'rgba(59, 130, 246, 0.15)');
+            svg.appendChild(fill);
+
+            const curve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            curve.setAttribute('d', dStr);
+            curve.setAttribute('stroke', '#3b82f6');
+            curve.setAttribute('stroke-width', '2');
+            curve.setAttribute('fill', 'none');
+            svg.appendChild(curve);
+        }
+
+        function loadPreset(key, btnElement) {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+
+            const data = presets[key];
+            state = {
+                admin: key,
+                year: data.year,
+                gdp: data.gdp,
+                ofw: data.ofw,
+                ngDebtPhpB: data.ngDebtPhpB ?? officialSources.ngDebtPhpB,
+                baseRice: data.baseRice,
+                baseVeco: data.baseVeco,
+                priceStressMultiplier: 1.0,
+                shocks: { gdpDrop: 0, priceStressSpike: 0 },
+                dataSource: 'preset',
+                syncedAt: null
+            };
+
+            Object.keys(inputs).forEach(id => { inputs[id].value = data[id]; });
+            updateEngine({ resetDelta: true });
+        }
+
+        function advanceYear() {
+            const vals = readInputValues();
+            prevViewState = { ...viewState };
+            prevState = clone(state);
+
+            const projection = applyPrivateCapitalGrowthBoost(calculateProjection(vals), lastMetrics?.privateInvestmentShare || 0);
+            state.year += 1;
+            state.gdp = state.gdp * (1 + projection.growthRate);
+            state.ofw = state.ofw * (1 + projection.ofwGrowth);
+            state.ngDebtPhpB = (state.ngDebtPhpB ?? officialSources.ngDebtPhpB) + (lastMetrics?.modelBorrowing ?? 0);
+            state.baseRice = state.baseRice * (1 + projection.priceDrift);
+            state.baseVeco = state.baseVeco * (1 + (projection.priceDrift * 0.90));
+
+            // Shocks fade gradually after each simulated year instead of becoming permanent doom fog.
+            state.shocks.gdpDrop = state.shocks.gdpDrop * 0.55;
+            state.shocks.priceStressSpike = state.shocks.priceStressSpike * 0.50;
+
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            setScenarioStatus(`Advanced to ${state.year}. GDP growth projection applied: ${(projection.growthRate * 100).toFixed(1)}%.`);
+            updateEngine();
+        }
+
+        function setScenarioStatus(message, tone = 'info') {
+            const el = document.getElementById('scenario-status');
+            if (!el) return;
+            const toneClass = tone === 'good' ? 'text-emerald-400' : tone === 'risk' ? 'text-rose-400' : tone === 'warn' ? 'text-amber-300' : 'text-slate-500';
+            el.className = `text-[11px] ${toneClass} leading-relaxed mt-4 border-t border-slate-800 pt-3`;
+            el.textContent = message;
+        }
+
+        function saveScenario() {
+            const payload = {
+                state: clone(state),
+                inputs: getInputSnapshot(),
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem('philFiscalEngineScenarioV10', JSON.stringify(payload));
+            setScenarioStatus(`Saved scenario for ${state.year}. You can reload it anytime in this browser.`, 'good');
+        }
+
+        function loadSavedScenario() {
+            const raw = localStorage.getItem('philFiscalEngineScenarioV10') || localStorage.getItem('philFiscalEngineScenarioV9') || localStorage.getItem('philFiscalEngineScenarioV8') || localStorage.getItem('philFiscalEngineScenarioV7') || localStorage.getItem('philFiscalEngineScenarioV6');
+            if (!raw) {
+                setScenarioStatus('No saved scenario found in this browser yet.', 'warn');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(raw);
+                if (!payload?.state || !payload?.inputs) throw new Error('Invalid saved scenario format.');
+                state = { ...normalizeScenarioState(payload.state), dataSource: 'saved', syncedAt: payload.state.syncedAt || null };
+                Object.keys(inputs).forEach(id => {
+                    if (payload.inputs[id] !== undefined) inputs[id].value = payload.inputs[id];
+                });
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                updateEngine({ resetDelta: true });
+                setScenarioStatus(`Loaded saved scenario for ${state.year}.`, 'good');
+            } catch (e) {
+                console.error('Scenario load failed:', e);
+                setScenarioStatus('Saved scenario could not be loaded. Try saving a fresh one.', 'risk');
+            }
+        }
+
+        function applyShock(kind) {
+            prevViewState = { ...viewState };
+            prevState = clone(state);
+
+            if (kind === 'rice') {
+                state.baseRice = state.baseRice * 1.08;
+                state.shocks.priceStressSpike = clamp(0, state.shocks.priceStressSpike + 0.03, 0.30);
+                setScenarioStatus('Rice supply shock applied: rice baseline +8%, price-stress pressure +0.03x.', 'warn');
+            } else if (kind === 'energy') {
+                state.baseVeco = state.baseVeco * 1.10;
+                state.shocks.priceStressSpike = clamp(0, state.shocks.priceStressSpike + 0.025, 0.30);
+                setScenarioStatus('Energy shock applied: electricity baseline +10%, price-stress pressure +0.025x.', 'warn');
+            } else if (kind === 'recession') {
+                state.gdp = state.gdp * 0.985;
+                state.shocks.gdpDrop = clamp(0, state.shocks.gdpDrop + 0.025, 0.12);
+                setScenarioStatus('Recession shock applied: GDP baseline -1.5%, next-year growth drag +2.5 points.', 'risk');
+            }
+
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            updateEngine();
+        }
+
+        function clearShocks() {
+            state.shocks = { gdpDrop: 0, priceStressSpike: 0 };
+            updateEngine({ resetDelta: true });
+            setScenarioStatus('Temporary shocks cleared. Current GDP and base prices remain as-is.', 'good');
+        }
+
+        async function fetchWorldBankAPI() {
+            const btn = document.getElementById('wb-btn');
+            btn.innerText = 'Fetching...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('https://api.worldbank.org/v2/country/ph/indicator/NY.GDP.MKTP.CN?format=json&mrnev=1');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                const latest = data?.[1]?.[0];
+                if (!latest?.value) throw new Error('World Bank response did not include GDP value.');
+
+                state.gdp = latest.value / 1_000_000_000; // Keep internal units in PHP billions.
+                state.year = Number(latest.date) || state.year;
+                state.dataSource = 'worldBank';
+                state.syncedAt = new Date().toISOString();
+
+                btn.innerText = `Synced ${latest.date}`;
+                setScenarioStatus(`World Bank GDP synced for ${latest.date}; internal model units kept in PHP billions.`, 'good');
+                btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'bg-rose-600');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                updateEngine({ resetDelta: true });
+            } catch (e) {
+                console.error('WB API Error:', e);
+                btn.innerText = 'API Failed';
+                btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'bg-emerald-600');
+                btn.classList.add('bg-rose-600', 'hover:bg-rose-500');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+
+
+        function renderSourceRegistry() {
+            const el = document.getElementById('source-registry');
+            if (!el) return;
+            el.innerHTML = sourceRegistry.map(src => `
+                <div class="quality-pill">
+                    <div class="flex justify-between gap-3 mb-1">
+                        <span class="text-[10px] font-bold text-white">${src.owner}</span>
+                        <span class="text-[9px] text-blue-300 uppercase tracking-widest">registry</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 leading-relaxed"><span class="text-slate-300">${src.dataset}</span> — ${src.role}</div>
+                    <div class="text-[10px] text-slate-500 mt-1 break-all">${src.url}</div>
+                </div>
+            `).join('');
+        }
+
+        function parseCsvLine(line) {
+            const out = [];
+            let current = '';
+            let quoted = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                const next = line[i + 1];
+                if (ch === '"' && quoted && next === '"') {
+                    current += '"';
+                    i++;
+                } else if (ch === '"') {
+                    quoted = !quoted;
+                } else if (ch === ',' && !quoted) {
+                    out.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            out.push(current.trim());
+            return out;
+        }
+
+        function parseForecastCsv(text) {
+            const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+            if (lines.length < 2) throw new Error('CSV must include a header and at least one data row.');
+            const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+            const missing = requiredForecastColumns.filter(col => !headers.includes(col));
+            if (missing.length) throw new Error(`Missing required columns: ${missing.join(', ')}`);
+
+            const rows = [];
+            for (const line of lines.slice(1)) {
+                const cells = parseCsvLine(line);
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = cells[idx] ?? ''; });
+                const normalized = normalizeForecastRow(row);
+                if (Number.isFinite(normalized.year)) rows.push(normalized);
+            }
+            if (rows.length < 5) throw new Error('Use at least 5 annual observations for meaningful backtesting.');
+            return rows.sort((a, b) => a.year - b.year);
+        }
+
+        function normalizeForecastRow(row) {
+            const cleaned = {
+                source_tag: row.source_tag || row.source || 'user-import',
+                row_status: row.row_status || row.status || 'complete'
+            };
+            requiredForecastColumns.forEach(col => {
+                const raw = String(row[col] ?? '').replace(/[₱,%\s]/g, '').replaceAll(',', '');
+                cleaned[col] = raw === '' ? NaN : Number(raw);
+            });
+            evidenceMetadataColumns.concat(optionalVariableEvidenceColumns).forEach(col => {
+                if (row[col] !== undefined && row[col] !== null) cleaned[col] = String(row[col]).trim();
+            });
+            if (!cleaned.source_owner && cleaned.source_tag && !/starter|demo/i.test(cleaned.source_tag)) cleaned.source_owner = cleaned.source_tag;
+            if (!cleaned.frequency) cleaned.frequency = 'annual';
+            cleaned.year = Math.round(cleaned.year);
+            return cleaned;
+        }
+
+        function isCompleteAnnualRow(row, options = {}) {
+            if (!requiredForecastColumns.every(col => Number.isFinite(row[col]))) return false;
+            const marker = `${row.row_status || ''} ${row.source_tag || ''}`.toLowerCase();
+
+            // Starter/demo rows are allowed only for UI testing and toy backtests.
+            // Evidence-grade workflows still exclude demo/starter/scaffold rows.
+            if (options.allowDemo) {
+                return !/(partial|anchor|forecast|projection|estimate-only)/.test(marker);
+            }
+
+            return !/(partial|anchor|forecast|projection|estimate-only|demo|starter|scaffold)/.test(marker);
+        }
+
+        function isEvidenceReadyRow(row) {
+            if (!isCompleteAnnualRow(row, { allowDemo: false })) return false;
+            const status = String(row.row_status || '').toLowerCase();
+            if (!/(complete_official|official|complete)/.test(status)) return false;
+            return evidenceRequiredColumns.every(col => String(row[col] || '').trim().length > 0);
+        }
+
+        function getEvidenceDiagnostics(series = forecastState.series) {
+            const rows = series || [];
+            const completeRows = rows.filter(row => isCompleteAnnualRow(row, { allowDemo: false }));
+            const evidenceRows = rows.filter(isEvidenceReadyRow);
+            const totalCells = Math.max(1, rows.length * evidenceRequiredColumns.length);
+            let presentCells = 0;
+            rows.forEach(row => evidenceRequiredColumns.forEach(col => {
+                if (String(row[col] || '').trim()) presentCells++;
+            }));
+            const metadataCompleteness = rows.length ? presentCells / totalCells : 0;
+            const completeOfficialShare = completeRows.length ? evidenceRows.length / completeRows.length : 0;
+            const demoRows = rows.filter(row => /(starter|demo|scaffold)/i.test(`${row.source_tag || ''} ${row.row_status || ''}`)).length;
+            const partialRows = rows.filter(row => /(partial|anchor|forecast|projection|estimate)/i.test(`${row.source_tag || ''} ${row.row_status || ''}`)).length;
+            const withUrls = rows.filter(row => /^https?:\/\//i.test(String(row.source_url || ''))).length;
+            const withTransformNotes = rows.filter(row => String(row.transform_note || '').trim().length >= 8).length;
+            const variableEvidencePairs = ['gdp', 'revenue', 'expenditure', 'debt', 'remittances', 'inflation'];
+            const variableSourceCells = rows.reduce((count, row) => count + variableEvidencePairs.reduce((inner, key) => inner + (/^https?:\/\//i.test(String(row[`${key}_source_url`] || '')) ? 1 : 0), 0), 0);
+            const variableSourceCoverage = rows.length ? variableSourceCells / Math.max(1, rows.length * variableEvidencePairs.length) : 0;
+            const years = evidenceRows.map(row => row.year).filter(Number.isFinite).sort((a,b) => a-b);
+            const spanYears = years.length ? `${years[0]}-${years[years.length - 1]}` : '--';
+            const sourceOwners = new Set(rows.map(row => String(row.source_owner || '').trim()).filter(Boolean));
+            const score = Math.round(100 * (
+                (0.30 * metadataCompleteness) +
+                (0.25 * completeOfficialShare) +
+                (0.15 * (rows.length ? withUrls / rows.length : 0)) +
+                (0.10 * (rows.length ? withTransformNotes / rows.length : 0)) +
+                (0.10 * clamp(0, evidenceRows.length / 10, 1)) +
+                (0.10 * Math.max(0, 1 - (demoRows / Math.max(1, rows.length))))
+            ));
+            const issues = [];
+            if (!rows.length) issues.push('No time-series dataset loaded.');
+            if (demoRows) issues.push(`${demoRows} row(s) are demo/starter data; evidence-grade workflows should exclude them.`);
+            if (partialRows) issues.push(`${partialRows} row(s) are partial/anchor/projection rows; these are excluded from backtests and forecast base rows.`);
+            if (metadataCompleteness < 0.90) issues.push('Evidence metadata is incomplete. Fill source owner, dataset, URL, release date, unit basis, frequency, status, and transform notes.');
+            if (completeRows.length && completeOfficialShare < 0.90) issues.push('Some complete annual rows are missing official provenance metadata.');
+            if (sourceOwners.size < 3 && rows.length) issues.push('Dataset uses too few source owners for a multi-domain fiscal model; use PSA, DBM/DOF/BTr, BSP, and CPI/inflation sources where applicable.');
+            if (rows.length && variableSourceCoverage < 0.50) issues.push('Variable-level provenance is thin. Add optional *_source_owner and *_source_url fields for GDP, revenue, expenditure, debt, remittances, and inflation when rows combine multiple agencies.');
+            return {
+                score,
+                rows: rows.length,
+                completeRows: completeRows.length,
+                evidenceRows: evidenceRows.length,
+                metadataCompleteness,
+                completeOfficialShare,
+                urlCoverage: rows.length ? withUrls / rows.length : 0,
+                transformCoverage: rows.length ? withTransformNotes / rows.length : 0,
+                variableSourceCoverage,
+                demoRows,
+                partialRows,
+                sourceOwners: [...sourceOwners],
+                spanYears,
+                issues
+            };
+        }
+
+        function validateEvidenceData() {
+            updateForecastQuality();
+            renderForecastingLab();
+            const ev = forecastState.quality?.evidence || getEvidenceDiagnostics();
+            const tone = ev.score >= 80 && ev.evidenceRows >= 10 && !ev.demoRows ? 'good' : ev.score >= 55 ? 'warn' : 'risk';
+            const msg = ev.issues.length ? ev.issues.slice(0, 2).join(' ') : 'Evidence ledger passed the current validation checks.';
+            setScenarioStatus(`Evidence score ${ev.score}/100. ${msg}`, tone);
+        }
+
+        function getCompleteAnnualSeries(series = forecastState.series, options = {}) {
+            return (series || [])
+                .filter(row => isCompleteAnnualRow(row, options))
+                .sort((a, b) => a.year - b.year);
+        }
+
+        function triggerForecastCsvImport() {
+            const input = document.getElementById('forecast-csv-input');
+            if (input) input.click();
+        }
+
+        async function handleForecastCsvFile(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                forecastState.series = parseForecastCsv(text);
+                forecastState.source = `imported:${file.name}`;
+                forecastState.importedAt = new Date().toISOString();
+                forecastState.backtest = null;
+                forecastState.forecast = null;
+                updateForecastQuality();
+                renderForecastingLab();
+                setScenarioStatus(`Imported ${forecastState.series.length} annual observations from ${file.name}. Run Backtest, then Forecast.`, 'good');
+            } catch (e) {
+                console.error('Forecast CSV import failed:', e);
+                setScenarioStatus(e.message || 'CSV import failed. Check the template and try again.', 'risk');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function loadStarterDataset() {
+            forecastState.series = clone(starterTimeSeries);
+            forecastState.source = 'starter-scaffold';
+            forecastState.importedAt = new Date().toISOString();
+            forecastState.backtest = null;
+            forecastState.forecast = null;
+            updateForecastQuality();
+            renderForecastingLab();
+            setScenarioStatus('Starter dataset loaded for UI/testing. The 2026 row is a partial calibration anchor and is excluded from rolling backtests/base forecasts. Import an evidence-grade PSA/DBM-BTr/BSP/PSA-CPI CSV before calling results evidence-grade.', 'warn');
+        }
+
+        async function syncWorldBankHistory() {
+            try {
+                const res = await fetch('https://api.worldbank.org/v2/country/ph/indicator/NY.GDP.MKTP.CN?format=json&per_page=80');
+                if (!res.ok) throw new Error(`World Bank HTTP ${res.status}`);
+                const data = await res.json();
+                const rows = (data?.[1] || [])
+                    .filter(d => d?.value && Number(d.date) >= 2010)
+                    .map(d => ({ year: Number(d.date), gdp_nominal_php_b: d.value / 1_000_000_000 }))
+                    .sort((a, b) => a.year - b.year);
+                if (rows.length < 5) throw new Error('World Bank response did not return enough GDP observations.');
+
+                const existingByYear = new Map((forecastState.series.length ? forecastState.series : starterTimeSeries).map(row => [row.year, row]));
+                rows.forEach(wb => {
+                    const current = existingByYear.get(wb.year) || { year: wb.year };
+                    existingByYear.set(wb.year, { ...current, ...wb, source_tag: `${current.source_tag || 'mixed'}+worldbank-gdp` });
+                });
+                forecastState.series = [...existingByYear.values()].sort((a, b) => a.year - b.year).map(row => normalizeForecastRow(row));
+                forecastState.source = forecastState.source === 'none' ? 'worldbank-gdp-plus-starter' : `${forecastState.source}+worldbank-gdp`;
+                forecastState.worldBankSyncedAt = new Date().toISOString();
+                forecastState.backtest = null;
+                forecastState.forecast = null;
+                updateForecastQuality();
+                renderForecastingLab();
+                setScenarioStatus(`Synced ${rows.length} World Bank nominal GDP observations into the forecast dataset. Import fiscal/debt/remittance columns for full-grade forecasting.`, 'good');
+            } catch (e) {
+                console.error('World Bank history sync failed:', e);
+                setScenarioStatus('World Bank history sync failed. You can still import an official CSV manually.', 'risk');
+            }
+        }
+
+        function exportForecastTemplate() {
+            const header = requiredForecastColumns.concat(evidenceMetadataColumns, optionalVariableEvidenceColumns).join(',');
+            const example = [
+                '2025', '28010', '5.6', '4640', '6125', '17150', '2095', '2.1',
+                'PSA/DBM-BTr/BSP composite',
+                'Annual official macro-fiscal evidence dataset',
+                'https://replace-with-official-source-url.example',
+                '2026-02-01', '2026-02-01', new Date().toISOString().slice(0, 10),
+                'php_billion_annual; percent_annual', 'annual', 'complete_official', 'official-composite-example',
+                'Merged official annual releases; remittances converted from USD to PHP billions using documented average FX rate.',
+                'PSA', 'https://psa.gov.ph/statistics/national-accounts',
+                'PSA', 'https://psa.gov.ph/statistics/national-accounts',
+                'DBM/DOF/BTr', 'https://www.dbm.gov.ph/index.php/budget-documents',
+                'DBM/BTr', 'https://www.dbm.gov.ph/index.php/budget-documents',
+                'BTr', 'https://www.treasury.gov.ph/',
+                'BSP', 'https://www.bsp.gov.ph/statistics/external/ofw2.aspx',
+                'PSA', 'https://psa.gov.ph/price-indices/cpi-ir'
+            ].map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',');
+            const dictionaryRows = Object.entries(evidenceDataDictionary).map(([field, definition]) => `# ${field}: ${definition}`).join('\n');
+            downloadTextFile(`${EXPORT_SLUG}-evidence-data-template.csv`, `${dictionaryRows}\n${header}\n${example}\n`, 'text/csv');
+            setScenarioStatus('Exported evidence-grade CSV template with provenance metadata. Fill it with official annual series, then Import CSV.', 'good');
+        }
+
+        function safeMean(values) {
+            const clean = values.filter(Number.isFinite);
+            if (!clean.length) return NaN;
+            return clean.reduce((sum, v) => sum + v, 0) / clean.length;
+        }
+
+        function safeStd(values) {
+            const clean = values.filter(Number.isFinite);
+            if (clean.length < 2) return 0;
+            const mean = safeMean(clean);
+            const variance = clean.reduce((sum, v) => sum + ((v - mean) ** 2), 0) / (clean.length - 1);
+            return Math.sqrt(variance);
+        }
+
+        function percentile(values, p) {
+            const clean = values.filter(Number.isFinite).sort((a, b) => a - b);
+            if (!clean.length) return NaN;
+            const idx = (clean.length - 1) * p;
+            const lo = Math.floor(idx);
+            const hi = Math.ceil(idx);
+            if (lo === hi) return clean[lo];
+            return clean[lo] + (clean[hi] - clean[lo]) * (idx - lo);
+        }
+
+        function seededRandom(seedObj) {
+            seedObj.seed = (seedObj.seed * 1664525 + 1013904223) % 4294967296;
+            return seedObj.seed / 4294967296;
+        }
+
+        function normalRandom(seedObj) {
+            const u1 = Math.max(1e-9, seededRandom(seedObj));
+            const u2 = Math.max(1e-9, seededRandom(seedObj));
+            return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        }
+
+        function deriveForecastParameters(series) {
+            const sorted = series.filter(r => Number.isFinite(r.gdp_nominal_php_b)).sort((a, b) => a.year - b.year);
+            const recent = sorted.slice(-5);
+            const nominalGrowth = [];
+            for (let i = 1; i < recent.length; i++) {
+                nominalGrowth.push((recent[i].gdp_nominal_php_b / Math.max(1, recent[i - 1].gdp_nominal_php_b)) - 1);
+            }
+            const revenueShare = recent.map(r => r.revenue_php_b / Math.max(1, r.gdp_nominal_php_b)).filter(Number.isFinite);
+            const spendingShare = recent.map(r => r.expenditure_php_b / Math.max(1, r.gdp_nominal_php_b)).filter(Number.isFinite);
+            const remittanceGrowth = [];
+            for (let i = 1; i < recent.length; i++) {
+                if (Number.isFinite(recent[i].remittances_php_b) && Number.isFinite(recent[i - 1].remittances_php_b)) {
+                    remittanceGrowth.push((recent[i].remittances_php_b / Math.max(1, recent[i - 1].remittances_php_b)) - 1);
+                }
+            }
+            const inflation = recent.map(r => r.inflation_pct / 100).filter(Number.isFinite);
+            const realGrowth = recent.map(r => r.real_gdp_growth_pct / 100).filter(Number.isFinite);
+            return {
+                nominalGrowthMean: safeMean(nominalGrowth),
+                nominalGrowthStd: Math.max(0.015, safeStd(nominalGrowth)),
+                realGrowthMean: safeMean(realGrowth),
+                realGrowthStd: Math.max(0.012, safeStd(realGrowth)),
+                revenueShareMean: safeMean(revenueShare),
+                revenueShareStd: Math.max(0.005, safeStd(revenueShare)),
+                spendingShareMean: safeMean(spendingShare),
+                spendingShareStd: Math.max(0.006, safeStd(spendingShare)),
+                remittanceGrowthMean: safeMean(remittanceGrowth),
+                remittanceGrowthStd: Math.max(0.008, safeStd(remittanceGrowth)),
+                inflationMean: safeMean(inflation),
+                inflationStd: Math.max(0.006, safeStd(inflation))
+            };
+        }
+
+        function getPolicyAdjustedSpendingShare(params, vals, stochasticShock = 0) {
+            // Social/infra sliders are budget-composition levers, not direct spending-as-%-of-GDP levers.
+            // This prevents the forecast from accidentally treating a 38% social allocation as +38% of GDP spending.
+            const neutral = getNeutralForecastVals();
+            const baseShare = params.spendingShareMean || getOfficialTargets().budgetShare;
+            const neutralDeployment = neutral.socialSpend + neutral.infraSpend + calibration.debtAdminTargetShare;
+            const currentDeployment = vals.socialSpend + vals.infraSpend + calibration.debtAdminTargetShare;
+            const deploymentPressure = (currentDeployment - neutralDeployment) * 0.025;
+            const socialTilt = (vals.socialSpend - neutral.socialSpend) * 0.012;
+            const infraTilt = (vals.infraSpend - neutral.infraSpend) * 0.014;
+            return clamp(0.16, baseShare + deploymentPressure + socialTilt + infraTilt + stochasticShock, 0.28);
+        }
+
+        function oneStepForecastFromSeries(trainingRows, targetYear, options = {}) {
+            const params = deriveForecastParameters(trainingRows);
+            const last = trainingRows[trainingRows.length - 1];
+            const vals = options.vals || (options.useCurrentPolicy ? (lastVals || readInputValues()) : getNeutralForecastVals());
+            const policyWeight = options.policyWeight ?? 0.15;
+            const policyProjection = calculateProjection(vals);
+            const policyGrowth = policyProjection.growthRate;
+            const nominalPolicyGrowth = policyGrowth + Math.max(0.015, params.inflationMean || 0.035);
+            const historicalNominalGrowth = params.nominalGrowthMean || nominalPolicyGrowth;
+            const gdpGrowth = ((1 - policyWeight) * historicalNominalGrowth) + (policyWeight * nominalPolicyGrowth);
+            const revenueShare = clamp(
+                0.11,
+                (params.revenueShareMean || getOfficialTargets().revenueShare) +
+                    (policyWeight * (((vals.corpTax - 0.25) * 0.08) + ((vals.vatTax - 0.12) * 0.10))),
+                0.22
+            );
+            const spendingShare = getPolicyAdjustedSpendingShare(params, vals, 0);
+            const remittanceGrowth = params.remittanceGrowthMean || policyProjection.ofwGrowth;
+            const inflation = clamp(0.01, (params.inflationMean || 0.035) + Math.max(0, state.priceStressMultiplier - 1) * 0.02 * policyWeight, 0.12);
+            const gdp = last.gdp_nominal_php_b * (1 + gdpGrowth);
+            const revenue = gdp * revenueShare;
+            const expenditure = gdp * spendingShare;
+            const fiscalBalance = expenditure - revenue;
+            const deficit = Math.max(0, fiscalBalance);
+            const debt = Math.max(0, (last.debt_php_b || state.ngDebtPhpB) + fiscalBalance);
+            const remittances = (last.remittances_php_b || state.ofw) * (1 + remittanceGrowth);
+            return { year: targetYear, gdp, revenue, expenditure, deficit, debt, debt_gdp: debt / Math.max(1, gdp), remittances, inflation, real_growth: policyGrowth };
+        }
+
+        function runBacktest() {
+            if (forecastState.series.length < 5) loadStarterDataset();
+            const allowDemo = forecastState.source === 'starter-scaffold';
+            const series = getCompleteAnnualSeries(forecastState.series, { allowDemo });
+            if (series.length < 5) {
+                setScenarioStatus('Backtest needs at least 5 complete annual rows. Starter/demo rows are allowed only for UI testing; evidence-grade workflows require official CSV data.', 'risk');
+                return;
+            }
+            const results = [];
+            for (let i = 4; i < series.length; i++) {
+                const training = series.slice(0, i);
+                const actual = series[i];
+                const predicted = oneStepForecastFromSeries(training, actual.year, { vals: getNeutralForecastVals(), policyWeight: 0.15 });
+                results.push({
+                    year: actual.year,
+                    gdpError: (predicted.gdp - actual.gdp_nominal_php_b) / Math.max(1, actual.gdp_nominal_php_b),
+                    revenueError: (predicted.revenue - actual.revenue_php_b) / Math.max(1, actual.revenue_php_b),
+                    debtError: (predicted.debt - actual.debt_php_b) / Math.max(1, actual.debt_php_b),
+                    predicted,
+                    actual
+                });
+            }
+            const mapeGdp = safeMean(results.map(r => Math.abs(r.gdpError)));
+            const mapeRevenue = safeMean(results.map(r => Math.abs(r.revenueError)));
+            const mapeDebt = safeMean(results.map(r => Math.abs(r.debtError)));
+            forecastState.backtest = { results, mapeGdp, mapeRevenue, mapeDebt, avgMape: safeMean([mapeGdp, mapeRevenue, mapeDebt]) };
+            updateForecastQuality();
+            renderForecastingLab();
+            const backtestTone = forecastState.source === 'starter-scaffold'
+                ? 'warn'
+                : forecastState.backtest.avgMape <= 0.08 ? 'good' : 'warn';
+            const sourceCaveat = forecastState.source === 'starter-scaffold' ? ' Starter scaffold results are not evidence-grade.' : '';
+            setScenarioStatus(`Backtest complete. Average MAPE: ${(forecastState.backtest.avgMape * 100).toFixed(1)}%.${sourceCaveat}`, backtestTone);
+        }
+
+        function runAcademicForecast(horizon = 5, simulations = 700) {
+            if (forecastState.series.length < 5) loadStarterDataset();
+            const allowDemo = forecastState.source === 'starter-scaffold';
+            const forecastBaseSeries = getCompleteAnnualSeries(forecastState.series, { allowDemo });
+            if (forecastBaseSeries.length < 5) {
+                setScenarioStatus('Forecast needs at least 5 complete annual observations. Starter/demo rows are allowed only for UI testing; evidence-grade workflows require official CSV data.', 'risk');
+                return;
+            }
+            if (!forecastState.backtest) runBacktest();
+
+            const params = deriveForecastParameters(forecastBaseSeries);
+            const vals = lastVals || readInputValues();
+            const policyProjection = calculateProjection(vals);
+            const last = forecastBaseSeries[forecastBaseSeries.length - 1];
+            const baseYear = Number.isFinite(last?.year) ? last.year : state.year;
+            const baseGdp = Number.isFinite(last?.gdp_nominal_php_b) ? last.gdp_nominal_php_b : state.gdp;
+            const baseDebt = Number.isFinite(last?.debt_php_b) ? last.debt_php_b : (state.ngDebtPhpB || officialSources.ngDebtPhpB);
+            const baseRemittances = Number.isFinite(last?.remittances_php_b) ? last.remittances_php_b : (state.ofw || getOfficialTargets().remittancePhpB);
+            const seedObj = { seed: Number(`${baseYear}${Math.round(baseGdp)}`.slice(0, 9)) || 20260709 };
+            const yearly = [];
+            let simPaths = Array.from({ length: simulations }, () => ({
+                gdp: baseGdp,
+                debt: baseDebt,
+                remittances: baseRemittances
+            }));
+
+            for (let h = 1; h <= horizon; h++) {
+                const year = baseYear + h;
+                const sims = simPaths.map(path => {
+                    const historicalNominal = params.nominalGrowthMean || 0.075;
+                    const scenarioNominal = policyProjection.growthRate + (params.inflationMean || 0.035);
+                    const nominalGrowth = clamp(-0.06, (0.55 * historicalNominal) + (0.45 * scenarioNominal) + normalRandom(seedObj) * params.nominalGrowthStd, 0.16);
+                    const revenueShare = clamp(0.11, (params.revenueShareMean || getOfficialTargets().revenueShare) + ((vals.corpTax - 0.25) * 0.08) + ((vals.vatTax - 0.12) * 0.10) + normalRandom(seedObj) * params.revenueShareStd, 0.23);
+                    const spendingShare = getPolicyAdjustedSpendingShare(params, vals, normalRandom(seedObj) * params.spendingShareStd);
+                    const remitGrowth = clamp(-0.02, (params.remittanceGrowthMean || policyProjection.ofwGrowth) + normalRandom(seedObj) * params.remittanceGrowthStd, 0.09);
+                    const inflation = clamp(0.01, (params.inflationMean || 0.035) + Math.max(0, state.priceStressMultiplier - 1) * 0.035 + normalRandom(seedObj) * params.inflationStd, 0.14);
+                    const gdp = path.gdp * (1 + nominalGrowth);
+                    const revenue = gdp * revenueShare;
+                    const expenditure = gdp * spendingShare;
+                    const fiscalBalance = expenditure - revenue;
+                    const deficit = Math.max(0, fiscalBalance);
+                    const debt = Math.max(0, path.debt + fiscalBalance);
+                    const remittances = path.remittances * (1 + remitGrowth);
+                    return { gdp, revenue, expenditure, deficit, debt, debt_gdp: debt / Math.max(1, gdp), remittances, inflation, nominalGrowth };
+                });
+
+                yearly.push({
+                    year,
+                    gdpP10: percentile(sims.map(s => s.gdp), 0.10),
+                    gdpP50: percentile(sims.map(s => s.gdp), 0.50),
+                    gdpP90: percentile(sims.map(s => s.gdp), 0.90),
+                    revenueP50: percentile(sims.map(s => s.revenue), 0.50),
+                    expenditureP50: percentile(sims.map(s => s.expenditure), 0.50),
+                    deficitP50: percentile(sims.map(s => s.deficit), 0.50),
+                    debtP50: percentile(sims.map(s => s.debt), 0.50),
+                    debtGdpP50: percentile(sims.map(s => s.debt_gdp), 0.50),
+                    inflationP50: percentile(sims.map(s => s.inflation), 0.50),
+                    remittancesP50: percentile(sims.map(s => s.remittances), 0.50)
+                });
+                simPaths = sims.map(s => ({ gdp: s.gdp, debt: s.debt, remittances: s.remittances }));
+            }
+
+            forecastState.forecast = {
+                generatedAt: new Date().toISOString(),
+                horizon,
+                simulations,
+                method: `ensemble: historical trend + calibrated fiscal shares + current policy levers + Monte Carlo bands; base year ${baseYear}`,
+                rows: yearly
+            };
+            updateForecastQuality();
+            renderForecastingLab();
+            const forecastTone = forecastState.source === 'starter-scaffold' ? 'warn' : 'good';
+            const forecastCaveat = forecastState.source === 'starter-scaffold' ? ' Starter scaffold forecast is for UI/testing only.' : '';
+            setScenarioStatus(`Generated ${horizon}-year Monte Carlo forecast from base year ${baseYear} with ${simulations} simulations per year.${forecastCaveat}`, forecastTone);
+        }
+
+        function updateForecastQuality() {
+            const series = forecastState.series || [];
+            const completeAnnualSeries = getCompleteAnnualSeries(series);
+            const completeRows = completeAnnualSeries.length;
+            const latestYear = completeAnnualSeries.length ? Math.max(...completeAnnualSeries.map(row => row.year).filter(Number.isFinite)) : null;
+            const completeness = series.length ? completeRows / series.length : 0;
+            const recency = latestYear ? clamp(0, 1 - Math.max(0, Math.abs(state.year - latestYear)) / 8, 1) : 0;
+            const obsScore = clamp(0, series.length / 12, 1);
+            const evidence = getEvidenceDiagnostics(series);
+            const sourceScore = forecastState.source?.startsWith('imported') ? Math.max(0.65, evidence.score / 100) : forecastState.source?.includes('worldbank') ? 0.55 : forecastState.source === 'starter-scaffold' ? 0.25 : 0;
+            const backtestMape = forecastState.backtest?.avgMape ?? null;
+            const backtestScore = backtestMape == null ? 0.35 : clamp(0, 1 - (backtestMape / 0.18), 1);
+            const score = Math.round(100 * ((0.20 * completeness) + (0.14 * recency) + (0.14 * obsScore) + (0.18 * sourceScore) + (0.16 * backtestScore) + (0.18 * (evidence.score / 100))));
+            const isImported = forecastState.source?.startsWith('imported');
+            const isStarter = forecastState.source === 'starter-scaffold';
+            let grade = 'Prototype';
+            if (isImported && completeRows >= 10 && evidence.evidenceRows >= 10 && evidence.score >= 85 && score >= 82 && backtestMape !== null && backtestMape <= 0.08 && !evidence.demoRows) grade = 'Evidence-Ready';
+            else if (isImported && completeRows >= 10 && score >= 78 && backtestMape !== null && backtestMape <= 0.10) grade = 'Academic-Ready';
+            else if (!isStarter && completeRows >= 6 && score >= 65 && backtestMape !== null) grade = 'Review-Ready';
+            else if (score >= 45) grade = 'Workshop-Ready';
+            forecastState.evidenceDiagnostics = evidence;
+            forecastState.quality = { score, grade, completeness, latestYear, completeRows, observations: series.length, sourceScore, backtestMape, evidence };
+        }
+
+        function renderForecastingLab() {
+            renderSourceRegistry();
+            if (!forecastState.quality) updateForecastQuality();
+            const q = forecastState.quality || { score: 0, grade: 'Prototype', observations: 0, completeRows: 0, completeness: 0, latestYear: null, backtestMape: null };
+            const qualityGrid = document.getElementById('forecast-quality-grid');
+            if (qualityGrid) {
+                const gradeColor = q.grade === 'Evidence-Ready' ? 'text-emerald-300' : q.grade === 'Academic-Ready' ? 'text-emerald-400' : q.grade === 'Review-Ready' ? 'text-blue-300' : q.grade === 'Workshop-Ready' ? 'text-amber-300' : 'text-rose-300';
+                const ev = q.evidence || getEvidenceDiagnostics();
+                qualityGrid.innerHTML = [
+                    { label: 'Model Grade', value: q.grade, note: `${q.score}/100`, valueClass: gradeColor },
+                    { label: 'Evidence Score', value: `${ev.score}/100`, note: `${ev.evidenceRows} evidence rows`, valueClass: ev.score >= 85 ? 'text-emerald-400' : ev.score >= 55 ? 'text-amber-300' : 'text-rose-300' },
+                    { label: 'Observations', value: `${q.observations}`, note: `${q.completeRows} complete rows`, valueClass: 'text-white' },
+                    { label: 'Latest Year', value: q.latestYear || '--', note: forecastState.source || 'none', valueClass: 'text-blue-300' },
+                    { label: 'Backtest MAPE', value: q.backtestMape == null ? '--' : `${(q.backtestMape * 100).toFixed(1)}%`, note: 'GDP + revenue + debt', valueClass: q.backtestMape != null && q.backtestMape <= 0.08 ? 'text-emerald-400' : 'text-amber-300' }
+                ].map(card => `
+                    <div class="quality-pill">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">${card.label}</span>
+                        <div class="text-lg font-mono font-bold ${card.valueClass}">${card.value}</div>
+                        <div class="text-[10px] text-slate-500">${card.note}</div>
+                    </div>
+                `).join('');
+            }
+
+            const methodNote = document.getElementById('forecast-method-note');
+            if (methodNote) {
+                const warning = forecastState.source === 'starter-scaffold'
+                    ? ' Starter data is for demonstration only; import official agency time series before relying on the forecast.'
+                    : '';
+                methodNote.textContent = `Method: evidence-ledger validation + rolling one-step backtest using complete annual rows only, neutral baseline policy levers, calibrated fiscal-share forecast, corrected budget-composition treatment, and Monte Carlo uncertainty bands. Current source: ${forecastState.source}.${warning}`;
+            }
+
+            const ev = forecastState.quality?.evidence || getEvidenceDiagnostics();
+            const evidenceSummary = document.getElementById('evidence-summary');
+            if (evidenceSummary) evidenceSummary.textContent = `${ev.score}/100 · ${ev.evidenceRows}/${ev.completeRows} complete rows evidence-ready`;
+            const evidenceGrid = document.getElementById('evidence-ledger-grid');
+            if (evidenceGrid) {
+                evidenceGrid.innerHTML = [
+                    { label: 'Metadata Complete', value: `${(ev.metadataCompleteness * 100).toFixed(0)}%`, note: 'required provenance fields' },
+                    { label: 'URL Coverage', value: `${(ev.urlCoverage * 100).toFixed(0)}%`, note: 'official source links' },
+                    { label: 'Transform Notes', value: `${(ev.transformCoverage * 100).toFixed(0)}%`, note: 'unit / conversion trail' },
+                    { label: 'Variable Sources', value: `${((ev.variableSourceCoverage || 0) * 100).toFixed(0)}%`, note: 'optional per-field provenance' },
+                    { label: 'Evidence Span', value: ev.spanYears, note: `${ev.sourceOwners.length} source owner(s)` },
+                    { label: 'Demo Rows', value: `${ev.demoRows}`, note: 'must be 0 for evidence-ready' },
+                    { label: 'Partial Rows', value: `${ev.partialRows}`, note: 'excluded from backtests' }
+                ].map(card => `
+                    <div class="quality-pill">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest block">${card.label}</span>
+                        <div class="text-base font-mono font-bold text-white">${card.value}</div>
+                        <div class="text-[10px] text-slate-500">${card.note}</div>
+                    </div>
+                `).join('');
+            }
+            const evidenceIssues = document.getElementById('evidence-issues');
+            if (evidenceIssues) {
+                evidenceIssues.innerHTML = ev.issues.length
+                    ? `<span class="text-amber-300 font-bold">Evidence flags:</span> ${ev.issues.join(' ')}`
+                    : '<span class="text-emerald-300 font-bold">Evidence flags:</span> No current evidence validation issues detected.';
+            }
+
+            const forecastWrap = document.getElementById('forecast-table-wrap');
+            if (forecastWrap && forecastState.forecast?.rows?.length) {
+                forecastWrap.classList.remove('hidden');
+                forecastWrap.innerHTML = `
+                    <table class="forecast-table">
+                        <thead><tr><th>Year</th><th>GDP P10</th><th>GDP P50</th><th>GDP P90</th><th>Revenue</th><th>Spend</th><th>Deficit</th><th>Debt/GDP</th><th>Infl.</th></tr></thead>
+                        <tbody>${forecastState.forecast.rows.map(r => `
+                            <tr>
+                                <td>${r.year}</td>
+                                <td>${formatPeso(r.gdpP10, 0)}</td>
+                                <td class="font-bold text-emerald-300">${formatPeso(r.gdpP50, 0)}</td>
+                                <td>${formatPeso(r.gdpP90, 0)}</td>
+                                <td>${formatPeso(r.revenueP50, 0)}</td>
+                                <td>${formatPeso(r.expenditureP50, 0)}</td>
+                                <td>${formatPeso(r.deficitP50, 0)}</td>
+                                <td>${(r.debtGdpP50 * 100).toFixed(1)}%</td>
+                                <td>${(r.inflationP50 * 100).toFixed(1)}%</td>
+                            </tr>`).join('')}</tbody>
+                    </table>`;
+            } else if (forecastWrap) {
+                forecastWrap.classList.add('hidden');
+            }
+
+            const backtestWrap = document.getElementById('backtest-table-wrap');
+            if (backtestWrap && forecastState.backtest?.results?.length) {
+                backtestWrap.classList.remove('hidden');
+                backtestWrap.innerHTML = `
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Backtest Detail</div>
+                    <table class="forecast-table">
+                        <thead><tr><th>Year</th><th>GDP Error</th><th>Revenue Error</th><th>Debt Error</th></tr></thead>
+                        <tbody>${forecastState.backtest.results.map(r => `
+                            <tr><td>${r.year}</td><td>${(r.gdpError * 100).toFixed(1)}%</td><td>${(r.revenueError * 100).toFixed(1)}%</td><td>${(r.debtError * 100).toFixed(1)}%</td></tr>`).join('')}</tbody>
+                    </table>`;
+            } else if (backtestWrap) {
+                backtestWrap.classList.add('hidden');
+            }
+        }
+
+        function exportForecastCsv() {
+            if (!forecastState.forecast?.rows?.length) {
+                runAcademicForecast();
+            }
+            const rows = [
+                ['year', 'gdp_p10_php_b', 'gdp_p50_php_b', 'gdp_p90_php_b', 'revenue_p50_php_b', 'expenditure_p50_php_b', 'deficit_p50_php_b', 'debt_p50_php_b', 'debt_gdp_p50_pct', 'inflation_p50_pct', 'remittances_p50_php_b']
+            ];
+            (forecastState.forecast?.rows || []).forEach(r => {
+                rows.push([
+                    r.year,
+                    r.gdpP10.toFixed(2),
+                    r.gdpP50.toFixed(2),
+                    r.gdpP90.toFixed(2),
+                    r.revenueP50.toFixed(2),
+                    r.expenditureP50.toFixed(2),
+                    r.deficitP50.toFixed(2),
+                    r.debtP50.toFixed(2),
+                    (r.debtGdpP50 * 100).toFixed(2),
+                    (r.inflationP50 * 100).toFixed(2),
+                    r.remittancesP50.toFixed(2)
+                ]);
+            });
+            const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
+            const stamp = new Date().toISOString().slice(0, 10);
+            downloadTextFile(`${EXPORT_SLUG}-forecast-${state.year}-${stamp}.csv`, csv, 'text/csv');
+            setScenarioStatus('Exported forecast CSV with uncertainty bands and fiscal path.', 'good');
+        }
+
+        Object.values(inputs).forEach(slider => {
+            slider.addEventListener('input', scheduleSliderUpdate, { passive: true });
+            slider.addEventListener('change', commitSliderUpdate);
+        });
+
+        window.addEventListener('resize', () => updateEngine());
+        renderSourceRegistry();
+        updateForecastQuality();
+        renderForecastingLab();
+        loadPreset('marcosJr', document.querySelector("button[onclick*=\"marcosJr\"]"));
+    </script>
+</body>
+</html>
